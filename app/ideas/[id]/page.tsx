@@ -232,7 +232,7 @@ export default async function IdeaPage({
               <TeamMembersList
                 ideaId={ideaWithRelations.id}
                 members={ideaWithRelations.members || []}
-                isOwner={isOwner}
+                isOwner={isOwner || false}
                 currentUserId={user.id}
               />
             </CardContent>
