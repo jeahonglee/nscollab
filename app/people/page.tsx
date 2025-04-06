@@ -24,7 +24,8 @@ export default async function PeoplePage({
   const search = (await searchParams).search || '';
   const tag = (await searchParams).tag || '';
   
-  // Build the query
+  // We need to fetch ALL profiles first and then filter
+  // If we have a tag filter, we can apply that at the database level
   let query = supabase
     .from('profiles')
     .select(`
@@ -32,55 +33,47 @@ export default async function PeoplePage({
       ns_stays (*)
     `);
   
-  // Apply filters - must do them one by one to handle correctly
-  
-  // Apply basic search filter on text fields
-  if (search) {
-    query = query.or(`full_name.ilike.%${search}%,bio.ilike.%${search}%`);
-  }
-  
-  // Apply tag filter if provided
+  // Only apply tag filter at DB level - we'll handle search filtering in-memory
   if (tag) {
     query = query.contains('status_tags', [tag]);
   }
   
-  // Execute query
-  const { data: profiles, error } = await query;
+  // Execute query to get all profiles (or filtered by tag if specified)
+  const { data: allProfiles, error } = await query;
   
-  // If we need to search skills, we need to do post-processing filter since
-  // array contains plus or conditions are difficult with Supabase's filters
-  let filteredProfiles = profiles;
-  
-  if (search && profiles) {
-    // Get additional matching profiles with skills containing the search term
-    const skillMatches = profiles.filter(profile => 
-      profile.skills && 
-      Array.isArray(profile.skills) && 
-      profile.skills.some((skill: string) => 
-        skill.toLowerCase().includes(search.toLowerCase())
-      )
-    );
-    
-    // Combine with existing profiles (already filtered by name/bio)
-    // Use Map to eliminate duplicates by ID
-    const profileMap = new Map();
-    
-    // Add profiles from text field search
-    profiles.forEach(profile => {
-      profileMap.set(profile.id, profile);
-    });
-    
-    // Add profiles from skills search
-    skillMatches.forEach(profile => {
-      profileMap.set(profile.id, profile);
-    });
-    
-    // Convert map back to array
-    filteredProfiles = Array.from(profileMap.values());
-  }
-  
+  // Handle any errors
   if (error) {
     console.error('Error fetching profiles:', error);
+  }
+  
+  // Filter profiles based on search criteria if search is provided
+  let filteredProfiles = allProfiles;
+  
+  // If search term provided, filter profiles in memory to handle skills properly
+  if (search && allProfiles && allProfiles.length > 0) {
+    const searchLower = search.toLowerCase();
+    
+    filteredProfiles = allProfiles.filter(profile => {
+      // Search in name
+      if (profile.full_name && profile.full_name.toLowerCase().includes(searchLower)) {
+        return true;
+      }
+      
+      // Search in bio
+      if (profile.bio && profile.bio.toLowerCase().includes(searchLower)) {
+        return true;
+      }
+      
+      // Search in skills (if they exist)
+      if (profile.skills && Array.isArray(profile.skills)) {
+        // Check each skill for the search term
+        return profile.skills.some((skill: string) => {
+          return skill.toLowerCase().includes(searchLower);
+        });
+      }
+      
+      return false;
+    });
   }
 
   // Get unique status tags from all profiles for filtering
