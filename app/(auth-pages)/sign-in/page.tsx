@@ -1,44 +1,36 @@
-import { signInAction } from "@/app/actions";
-import { FormMessage, Message } from "@/components/form-message";
-import { SubmitButton } from "@/components/submit-button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import Link from "next/link";
+import { signInWithOAuthAction } from '@/app/actions';
+import { FormMessage, Message } from '@/components/form-message';
+import { Button } from '@/components/ui/button';
+import { FaDiscord } from 'react-icons/fa';
 
 export default async function Login(props: { searchParams: Promise<Message> }) {
   const searchParams = await props.searchParams;
   return (
-    <form className="flex-1 flex flex-col min-w-64">
-      <h1 className="text-2xl font-medium">Sign in</h1>
-      <p className="text-sm text-foreground">
-        Don't have an account?{" "}
-        <Link className="text-foreground font-medium underline" href="/sign-up">
-          Sign up
-        </Link>
+    <div className="flex-1 flex flex-col min-w-80">
+      <h1 className="text-2xl font-medium">Sign in to NS Connect</h1>
+      <p className="text-sm text-foreground mt-2">
+        Access the NS community platform and connect with other members
       </p>
-      <div className="flex flex-col gap-2 [&>input]:mb-3 mt-8">
-        <Label htmlFor="email">Email</Label>
-        <Input name="email" placeholder="you@example.com" required />
-        <div className="flex justify-between items-center">
-          <Label htmlFor="password">Password</Label>
-          <Link
-            className="text-xs text-foreground underline"
-            href="/forgot-password"
+
+      <div className="flex flex-col gap-3 mt-8">
+        <form action={signInWithOAuthAction.bind(null, 'discord')}>
+          <Button
+            className="w-full flex items-center gap-2 bg-[#5865F2] text-white hover:bg-[#4752c4]"
+            type="submit"
           >
-            Forgot Password?
-          </Link>
-        </div>
-        <Input
-          type="password"
-          name="password"
-          placeholder="Your password"
-          required
-        />
-        <SubmitButton pendingText="Signing In..." formAction={signInAction}>
-          Sign in
-        </SubmitButton>
+            <FaDiscord className="h-4 w-4" />
+            <span>Continue with Discord</span>
+          </Button>
+        </form>
+
         <FormMessage message={searchParams} />
+
+        <div className="text-xs text-center text-muted-foreground mt-4">
+          This platform is for Network School members only.
+          <br />
+          Please use the same account you use for NS.
+        </div>
       </div>
-    </form>
+    </div>
   );
 }
