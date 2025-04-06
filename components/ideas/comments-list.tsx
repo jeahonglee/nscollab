@@ -25,44 +25,77 @@ interface CommentsListProps {
   currentUserId: string;
 }
 
-export function CommentsList({ ideaId, comments, currentUserId }: CommentsListProps) {
+export function CommentsList({
+  ideaId,
+  comments,
+  currentUserId,
+}: CommentsListProps) {
   // Sort comments by creation time (newest first)
-  const sortedComments = [...comments].sort((a, b) => 
-    new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  const sortedComments = [...comments].sort(
+    (a, b) =>
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   );
-  
+
   // Server action to add a new comment
   async function addComment(formData: FormData) {
     'use server';
-    
+
     const commentText = formData.get('comment') as string;
     if (!commentText.trim()) return;
-    
+
     const supabase = await createClient();
-    
+
     // Add comment
-    const { error } = await supabase
-      .from('idea_comments')
-      .insert({
-        idea_id: ideaId,
-        user_id: currentUserId,
-        comment_text: commentText,
-      });
-    
+    const { error } = await supabase.from('idea_comments').insert({
+      idea_id: ideaId,
+      user_id: currentUserId,
+      comment_text: commentText,
+    });
+
     if (error) {
       console.error('Error adding comment:', error);
       return;
     }
-    
+
     // Update last activity timestamp
     await supabase
       .from('ideas')
       .update({ last_activity_at: new Date().toISOString() })
       .eq('id', ideaId);
-    
+
     revalidatePath(`/ideas/${ideaId}`);
   }
-  
+
+  // Server action to delete a comment
+  async function deleteComment(formData: FormData) {
+    'use server';
+
+    const commentId = formData.get('commentId') as string;
+    if (!commentId) return;
+
+    const supabase = await createClient();
+
+    // Delete the comment
+    const { error } = await supabase
+      .from('idea_comments')
+      .delete()
+      .eq('id', commentId)
+      .eq('user_id', currentUserId); // Security check: ensure only the comment owner can delete
+
+    if (error) {
+      console.error('Error deleting comment:', error);
+      return;
+    }
+
+    // Update last activity timestamp
+    await supabase
+      .from('ideas')
+      .update({ last_activity_at: new Date().toISOString() })
+      .eq('id', ideaId);
+
+    revalidatePath(`/ideas/${ideaId}`);
+  }
+
   // Get initials for avatar fallback
   const getInitials = (name: string | null | undefined) => {
     if (!name) return 'NS';
@@ -87,12 +120,15 @@ export function CommentsList({ ideaId, comments, currentUserId }: CommentsListPr
           <Button type="submit">Add Comment</Button>
         </div>
       </form>
-      
+
       {/* Comments List */}
       <div className="space-y-4">
         {sortedComments.length > 0 ? (
           sortedComments.map((comment) => (
-            <div key={comment.id} className="flex gap-4 pb-4 border-b last:border-0">
+            <div
+              key={comment.id}
+              className="flex gap-4 pb-4 border-b last:border-0"
+            >
               {comment.profile?.discord_username ? (
                 <Link href={`/profile/${comment.profile.discord_username}`}>
                   <Avatar className="h-8 w-8">
@@ -100,7 +136,9 @@ export function CommentsList({ ideaId, comments, currentUserId }: CommentsListPr
                       src={comment.profile?.avatar_url || ''}
                       alt={comment.profile?.full_name || ''}
                     />
-                    <AvatarFallback>{getInitials(comment.profile?.full_name)}</AvatarFallback>
+                    <AvatarFallback>
+                      {getInitials(comment.profile?.full_name)}
+                    </AvatarFallback>
                   </Avatar>
                 </Link>
               ) : (
@@ -109,10 +147,12 @@ export function CommentsList({ ideaId, comments, currentUserId }: CommentsListPr
                     src={comment.profile?.avatar_url || ''}
                     alt={comment.profile?.full_name || ''}
                   />
-                  <AvatarFallback>{getInitials(comment.profile?.full_name)}</AvatarFallback>
+                  <AvatarFallback>
+                    {getInitials(comment.profile?.full_name)}
+                  </AvatarFallback>
                 </Avatar>
               )}
-              
+
               <div className="flex-1">
                 <div className="flex justify-between items-center mb-2">
                   <div className="flex items-center gap-2">
@@ -129,18 +169,34 @@ export function CommentsList({ ideaId, comments, currentUserId }: CommentsListPr
                       )}
                     </span>
                     <span className="text-xs text-muted-foreground">
-                      {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
+                      {formatDistanceToNow(new Date(comment.created_at), {
+                        addSuffix: true,
+                      })}
                     </span>
                   </div>
-                  
+
                   {comment.user_id === currentUserId && (
-                    <Button variant="ghost" size="sm" className="h-6 px-2">
-                      Delete
-                    </Button>
+                    <form action={deleteComment}>
+                      <input
+                        type="hidden"
+                        name="commentId"
+                        value={comment.id}
+                      />
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 px-2"
+                        type="submit"
+                      >
+                        Delete
+                      </Button>
+                    </form>
                   )}
                 </div>
-                
-                <p className="text-sm whitespace-pre-line">{comment.comment_text}</p>
+
+                <p className="text-sm whitespace-pre-line">
+                  {comment.comment_text}
+                </p>
               </div>
             </div>
           ))
