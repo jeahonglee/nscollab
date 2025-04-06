@@ -8,8 +8,7 @@ import { Provider } from '@supabase/supabase-js';
 
 // OAuth sign-in action for Google, Apple, Discord
 export const signInWithOAuthAction = async (
-  provider: Provider,
-  formData: FormData
+  provider: Provider
 ) => {
   const supabase = await createClient();
   const origin = (await headers()).get('origin');

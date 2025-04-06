@@ -7,7 +7,6 @@ import {
   formatDistanceToNow,
   subWeeks,
   startOfWeek,
-  endOfWeek,
   format,
 } from 'date-fns';
 import {
@@ -15,62 +14,12 @@ import {
   Lightbulb,
   Clock,
   ChevronDown,
-  ChevronRight,
-  ChevronUp,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 // Define types to match Supabase response format
-type Profile = {
-  id: string;
-  full_name: string | null;
-  avatar_url: string | null;
-  discord_username: string | null;
-};
 
-type IdeaProfile = {
-  id: string;
-  full_name: string | null;
-  avatar_url: string | null;
-  discord_username: string | null;
-};
 
-type Idea = {
-  id: string;
-  title: string;
-  status: string;
-  description: string;
-  created_at: string;
-  submitter_user_id: string;
-  profile: IdeaProfile[];
-};
-
-// Original type from Supabase - what the raw data looks like
-type CommentWithRelations = {
-  id: string;
-  idea_id: string;
-  user_id: string;
-  comment_text: string;
-  created_at: string;
-  profile: {
-    id: string;
-    full_name: string | null;
-    avatar_url: string | null;
-  };
-  idea: {
-    id: string;
-    title: string;
-    status: string;
-    description: string;
-    created_at: string;
-    submitter_user_id: string;
-    profile: {
-      id: string;
-      full_name: string | null;
-      avatar_url: string | null;
-    };
-  };
-};
 
 export default async function DashboardPage({
   searchParams,
@@ -159,8 +108,8 @@ export default async function DashboardPage({
 
   // Process the data to handle possible array/nested structures and group by idea
   const processComments = (recentComments || []).map((comment) => {
-    // First cast to any to avoid TypeScript errors during transformation
-    const rawComment = comment as any;
+    // Cast to appropriate type to avoid TypeScript errors during transformation
+    const rawComment = comment as Record<string, unknown>;
 
     // Extract profile (might be an array or object)
     let profile = null;

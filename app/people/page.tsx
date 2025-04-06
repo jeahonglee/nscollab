@@ -1,5 +1,6 @@
 import { createClient } from '@/utils/supabase/server';
 import { redirect } from 'next/navigation';
+import Link from 'next/link';
 import { ProfileCard } from '@/components/profile/profile-card';
 import { ProfileWithRelations } from '@/lib/supabase/types';
 import { Input } from '@/components/ui/input';
@@ -65,7 +66,7 @@ export default async function PeoplePage({
       }
       
       // Check if any of the stays match the current month
-      return profile.ns_stays.some((stay: any) => {
+      return profile.ns_stays.some((stay: { start_month?: string }) => {
         // Each stay has a start_month in YYYY-MM-DD format (e.g., 2025-04-01)
         if (!stay.start_month || typeof stay.start_month !== 'string') {
           return false;
@@ -122,7 +123,7 @@ export default async function PeoplePage({
         <div>
           <h1 className="text-3xl font-bold">People Directory</h1>
           <p className="text-muted-foreground">
-            Discover NS members, their skills, and what they're working on
+            Discover NS members, their skills, and what they&apos;re working on
           </p>
         </div>
       </div>
@@ -155,7 +156,7 @@ export default async function PeoplePage({
         {tag && (
           <Badge variant="secondary" className="gap-1">
             {tag}
-            <a href="/people" className="ml-1 hover:text-destructive">×</a>
+            <Link href="/people" className="ml-1 hover:text-destructive">×</Link>
           </Badge>
         )}
         

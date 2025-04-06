@@ -84,13 +84,13 @@ export default async function IdeasPage({
         {statusFilter && (
           <Badge variant="secondary" className="gap-1">
             {statusFilter}
-            <a 
+            <Link
               href="/ideas" 
               className="ml-1 hover:text-destructive"
               aria-label="Remove status filter"
             >
               ×
-            </a>
+            </Link>
           </Badge>
         )}
         

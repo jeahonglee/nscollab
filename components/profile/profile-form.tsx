@@ -8,9 +8,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Badge } from '@/components/ui/badge';
-import { X, Plus, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Plus, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useState } from 'react';
 
 // Import server actions from a separate file
@@ -32,6 +31,13 @@ export default function ProfileForm({ user, profile }: ProfileFormProps) {
   // State to track if form is submitting
   const [isSubmitting, setIsSubmitting] = useState(false);
   
+  // Initialize custom links from profile or empty array
+  const [customLinks, setCustomLinks] = useState<CustomLink[]>(
+    profile.custom_links && Array.isArray(profile.custom_links)
+      ? (profile.custom_links as CustomLink[])
+      : []
+  );
+  
   // Client-side wrapper for updateProfile server action
   const handleUpdateProfile = async (formData: FormData) => {
     try {
@@ -46,6 +52,7 @@ export default function ProfileForm({ user, profile }: ProfileFormProps) {
   };
 
   // Client-side wrapper for addNsStay server action
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleAddNsStay = async (formData: FormData) => {
     try {
       await addNsStay(formData, user.id);
@@ -55,6 +62,7 @@ export default function ProfileForm({ user, profile }: ProfileFormProps) {
   };
 
   // Client-side wrapper for deleteNsStay server action
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleDeleteNsStay = async (formData: FormData) => {
     try {
       await deleteNsStay(formData, user.id);
@@ -64,6 +72,7 @@ export default function ProfileForm({ user, profile }: ProfileFormProps) {
   };
   
   // Helper to format date for display
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
@@ -104,8 +113,6 @@ export default function ProfileForm({ user, profile }: ProfileFormProps) {
       }
       
       // If we get here, this month is not active
-      return false;
-      
       return false;
     });
   };
@@ -322,15 +329,9 @@ export default function ProfileForm({ user, profile }: ProfileFormProps) {
               
               {/* Custom Links Section */}
               <div className="space-y-3">
-                {/* State to manage custom links */}
+                {/* Custom links section */}
                 {(() => {
-                  // Initialize custom links from profile or empty array
-                  const [customLinks, setCustomLinks] = useState<CustomLink[]>(
-                    profile.custom_links && Array.isArray(profile.custom_links)
-                      ? (profile.custom_links as CustomLink[])
-                      : []
-                  );
-                  
+                  // Define functions to manipulate the custom links
                   const addLink = () => {
                     setCustomLinks([...customLinks, { label: '', url: '' }]);
                   };
@@ -400,7 +401,7 @@ export default function ProfileForm({ user, profile }: ProfileFormProps) {
             <div className="grid gap-2">
               <Label htmlFor="skills">Skills & Expertise</Label>
               <p className="text-sm text-muted-foreground mb-2">
-                Enter your skills separated by commas (e.g., "React, Python, Marketing, UI/UX")
+                Enter your skills separated by commas (e.g., &quot;React, Python, Marketing, UI/UX&quot;)
               </p>
               <Textarea 
                 id="skills" 
@@ -450,7 +451,7 @@ export default function ProfileForm({ user, profile }: ProfileFormProps) {
           <CardHeader>
             <CardTitle>Select Your NS Months</CardTitle>
             <CardDescription>
-              Toggle the months you've participated in Network School
+              Toggle the months you&apos;ve participated in Network School
             </CardDescription>
           </CardHeader>
           <CardContent>

@@ -28,7 +28,7 @@ export async function GET(request: Request) {
       
       // Get user metadata from Discord OAuth
       // Try all possible places Discord might store the username
-      let rawDiscordUsername = 
+      const rawDiscordUsername = 
         data.user.user_metadata?.preferred_username || 
         data.user.user_metadata?.user_name || 
         data.user.user_metadata?.name || 

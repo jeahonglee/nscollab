@@ -1,6 +1,7 @@
 import { createClient } from '@/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
+import Link from 'next/link';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -42,7 +43,7 @@ export function IdeaEditForm({ idea }: IdeaEditFormProps) {
     }
     
     // Create an update object for only changed fields
-    const updateData: Record<string, any> = {};
+    const updateData: Record<string, string | string[] | null> = {};
     
     // Track changes for comment
     const changes: string[] = [];
@@ -199,7 +200,7 @@ export function IdeaEditForm({ idea }: IdeaEditFormProps) {
             <div className="grid gap-2 mt-4">
               <Label>Looking For</Label>
               <p className="text-sm text-muted-foreground mb-2">
-                Select what kind of help or team members you're looking for
+                Select what kind of help or team members you&apos;re looking for
               </p>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -224,7 +225,7 @@ export function IdeaEditForm({ idea }: IdeaEditFormProps) {
           
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" asChild>
-              <a href={`/ideas/${idea.id}`}>Cancel</a>
+              <Link href={`/ideas/${idea.id}`}>Cancel</Link>
             </Button>
             <Button type="submit">Save Changes</Button>
           </div>

@@ -10,7 +10,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { createClient } from '@/utils/supabase/server';
-import { Database } from '@/lib/supabase/types';
 
 export default async function UserMenu({ user }: { user: User }) {
   const supabase = await createClient();
@@ -35,7 +34,7 @@ export default async function UserMenu({ user }: { user: User }) {
     return user.email?.substring(0, 2).toUpperCase() || 'NS';
   };
 
-  async function signOut(formData: FormData) {
+  async function signOut() {
     'use server';
     const supabase = await createClient();
     await supabase.auth.signOut();

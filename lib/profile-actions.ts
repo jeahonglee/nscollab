@@ -28,7 +28,7 @@ export async function updateProfile(formData: FormData, userId: string) {
   }
 
   // Create an update object with only the fields that are present in the form
-  const updateData: Record<string, any> = {
+  const updateData: Record<string, string | string[] | { label: string; url: string }[] | null> = {
     // Only update these if they're in the form
     full_name: formData.has('fullName')
       ? (formData.get('fullName') as string)

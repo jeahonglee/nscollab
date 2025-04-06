@@ -3,7 +3,6 @@ import { revalidatePath } from 'next/cache';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { format } from 'date-fns';
 import { UserPlus, UserMinus } from 'lucide-react';
 
 interface Member {

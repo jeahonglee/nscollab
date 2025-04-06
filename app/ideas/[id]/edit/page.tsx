@@ -59,7 +59,7 @@ export default async function EditIdeaPage({ params }: { params: Promise<{ id: s
         
         <h1 className="text-3xl font-bold mb-2">Edit Idea</h1>
         <p className="text-muted-foreground mb-6">
-          Update your idea's details, status, and requirements.
+          Update your idea&apos;s details, status, and requirements.
         </p>
         
         <IdeaEditForm idea={ideaWithRelations} />
