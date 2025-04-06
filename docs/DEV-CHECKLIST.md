@@ -1,4 +1,4 @@
-# Development Checklist: NS Connect Platform
+# Development Checklist: NS Collab Platform
 
 **Stack:** Next.js 15 (App Router), Supabase, TypeScript, Tailwind CSS
 **Project Setup:** `npx create-next-app -e with-supabase`

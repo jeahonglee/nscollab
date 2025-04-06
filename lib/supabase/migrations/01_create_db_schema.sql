@@ -1,4 +1,4 @@
--- Create NS Connect Platform database schema
+-- Create NS Collab Platform database schema
 -- Based on development checklist specifications
 
 -- Enable UUID extension if not already enabled

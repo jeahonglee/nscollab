@@ -278,7 +278,7 @@ export default async function DashboardPage({
       <div>
         <h1 className="text-3xl font-bold">Dashboard</h1>
         <p className="text-muted-foreground">
-          Recent activity from the NS Connect community
+          Recent activity from the NS Collab community
         </p>
       </div>
 

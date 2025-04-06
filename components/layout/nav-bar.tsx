@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { createClient } from '@/utils/supabase/server';
 import UserMenu from '@/components/layout/user-menu';
 import NSLogo from '@/components/ns-logo';
+import ThemeSwitcherWrapper from '@/components/layout/theme-switcher-wrapper';
 
 export default async function NavBar() {
   const supabase = await createClient();
@@ -16,7 +17,7 @@ export default async function NavBar() {
         <div className="mr-4 flex">
           <Link href="/" className="flex items-center space-x-3">
             <NSLogo width={18} height={20} />
-            <span className="font-bold text-lg">NS Connect</span>
+            <span className="font-bold text-lg">NS Collab</span>
           </Link>
         </div>
         <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
@@ -34,7 +35,8 @@ export default async function NavBar() {
               Ideas
             </Link>
           </nav>
-          <div className="flex items-center">
+          <div className="flex items-center gap-2">
+            <ThemeSwitcherWrapper />
             {user ? (
               <UserMenu user={user} />
             ) : (

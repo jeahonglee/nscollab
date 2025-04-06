@@ -120,6 +120,18 @@ export async function updateProfile(formData: FormData, userId: string) {
   }
 
   revalidatePath('/profile/me');
+  
+  // Get the updated discord_username to redirect to the user's profile page
+  const { data: updatedProfile } = await supabase
+    .from('profiles')
+    .select('discord_username')
+    .eq('id', userId)
+    .single();
+  
+  // Redirect to the user's profile page
+  if (updatedProfile?.discord_username) {
+    redirect(`/profile/${updatedProfile.discord_username}`);
+  }
 }
 
 export async function addNsStay(formData: FormData, userId: string) {

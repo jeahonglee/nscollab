@@ -7,7 +7,7 @@ export default async function Login(props: { searchParams: Promise<Message> }) {
   const searchParams = await props.searchParams;
   return (
     <div className="flex-1 flex flex-col min-w-80">
-      <h1 className="text-2xl font-medium">Sign in to NS Connect</h1>
+      <h1 className="text-2xl font-medium">Sign in to NS Collab</h1>
       <p className="text-sm text-foreground mt-2">
         Access the NS community platform and connect with other members
       </p>
