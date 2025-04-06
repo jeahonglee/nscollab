@@ -10,6 +10,7 @@ import { ArrowLeft, Edit, MessageSquare, UserPlus } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
 import { CommentsList } from '@/components/ideas/comments-list';
 import { TeamMembersList } from '@/components/ideas/team-members-list';
+import { DeleteIdeaButton } from '@/components/ideas/delete-idea-button';
 
 export default async function IdeaPage({
   params,
@@ -112,12 +113,15 @@ export default async function IdeaPage({
 
           <div className="flex gap-2">
             {isOwner && (
-              <Button variant="outline" asChild>
-                <Link href={`/ideas/${ideaWithRelations.id}/edit`}>
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit
-                </Link>
-              </Button>
+              <>
+                <Button variant="outline" asChild>
+                  <Link href={`/ideas/${ideaWithRelations.id}/edit`}>
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit
+                  </Link>
+                </Button>
+                <DeleteIdeaButton ideaId={ideaWithRelations.id} />
+              </>
             )}
 
             {!isMember && (
@@ -144,7 +148,6 @@ export default async function IdeaPage({
               {ideaWithRelations.looking_for_tags &&
                 ideaWithRelations.looking_for_tags.length > 0 && (
                   <div className="mt-6 pt-6 border-t">
-                    <h3 className="text-lg font-medium mb-2">Looking For</h3>
                     <div className="flex flex-wrap gap-2">
                       {ideaWithRelations.looking_for_tags.map((tag) => (
                         <Badge key={tag}>{tag}</Badge>
@@ -181,7 +184,9 @@ export default async function IdeaPage({
             </CardHeader>
             <CardContent className="pt-0">
               <div className="flex items-center gap-3">
-                <Link href={`/profile/${ideaWithRelations.profile?.discord_username}`}>
+                <Link
+                  href={`/profile/${ideaWithRelations.profile?.discord_username}`}
+                >
                   <Avatar>
                     <AvatarImage
                       src={ideaWithRelations.profile?.avatar_url || ''}

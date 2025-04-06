@@ -7,9 +7,7 @@ import { redirect } from 'next/navigation';
 import { Provider } from '@supabase/supabase-js';
 
 // OAuth sign-in action for Google, Apple, Discord
-export const signInWithOAuthAction = async (
-  provider: Provider
-) => {
+export const signInWithOAuthAction = async (provider: Provider) => {
   const supabase = await createClient();
   const origin = (await headers()).get('origin');
 
@@ -88,4 +86,49 @@ export const signOutAction = async () => {
   const supabase = await createClient();
   await supabase.auth.signOut();
   return redirect('/sign-in');
+};
+
+export const deleteIdeaAction = async (ideaId: string) => {
+  const supabase = await createClient();
+
+  // Check if user is authenticated
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { success: false, error: 'You must be logged in to delete an idea' };
+  }
+
+  // Check if user is the owner of the idea
+  const { data: members, error: memberError } = await supabase
+    .from('idea_members')
+    .select('*')
+    .eq('idea_id', ideaId)
+    .eq('user_id', user.id)
+    .eq('role', 'Owner')
+    .single();
+
+  if (memberError || !members) {
+    console.error('Error checking ownership:', memberError);
+    return { success: false, error: 'Only the owner can delete this idea' };
+  }
+
+  // With RLS policies in place, we can now directly delete the idea
+  // The cascade delete will handle comments and team members
+  const { error: ideaError } = await supabase
+    .from('ideas')
+    .delete()
+    .eq('id', ideaId);
+
+  if (ideaError) {
+    console.error('Error deleting idea:', ideaError);
+    return {
+      success: false,
+      error:
+        'Failed to delete the idea. Please make sure the RLS policy is applied.',
+    };
+  }
+
+  return { success: true };
 };
