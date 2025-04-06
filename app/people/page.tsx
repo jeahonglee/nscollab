@@ -5,12 +5,14 @@ import { ProfileWithRelations } from '@/lib/supabase/types';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Search, Filter } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Search } from 'lucide-react';
 
 export default async function PeoplePage({
   searchParams,
 }: {
-  searchParams: Promise<{ search?: string; tag?: string }>
+  searchParams: Promise<{ search?: string; tag?: string; current_ns?: string }>
 }) {
   const supabase = await createClient();
   
@@ -20,9 +22,10 @@ export default async function PeoplePage({
     redirect('/sign-in');
   }
   
-  // Get search and tag parameters
+  // Get search, tag, and current_ns parameters
   const search = (await searchParams).search || '';
   const tag = (await searchParams).tag || '';
+  const currentNsOnly = (await searchParams).current_ns === 'true';
   
   // We need to fetch ALL profiles first and then filter
   // If we have a tag filter, we can apply that at the database level
@@ -46,8 +49,17 @@ export default async function PeoplePage({
     console.error('Error fetching profiles:', error);
   }
   
-  // Filter profiles based on search criteria if search is provided
+  // Filter profiles based on search criteria and current NS status
   let filteredProfiles = allProfiles;
+  
+  // If current_ns filter is active, only show people with active NS stays
+  if (currentNsOnly && filteredProfiles && filteredProfiles.length > 0) {
+    filteredProfiles = filteredProfiles.filter(profile => {
+      return profile.ns_stays && 
+             Array.isArray(profile.ns_stays) && 
+             profile.ns_stays.length > 0;
+    });
+  }
   
   // If search term provided, filter profiles in memory to handle skills properly
   if (search && allProfiles && allProfiles.length > 0) {
@@ -112,11 +124,22 @@ export default async function PeoplePage({
           <Button type="submit">Search</Button>
         </form>
         
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="icon">
-            <Filter className="h-4 w-4" />
-          </Button>
-        </div>
+        <form className="flex items-center gap-2" action="/people" method="GET">
+          {/* Preserve existing search and tag parameters if they exist */}
+          {search && <input type="hidden" name="search" value={search} />}
+          {tag && <input type="hidden" name="tag" value={tag} />}
+          
+          <div className="flex items-center gap-2">
+            <Switch 
+              id="current-ns-filter" 
+              name="current_ns"
+              defaultChecked={currentNsOnly}
+              value="true"
+            />
+            <Label htmlFor="current-ns-filter">Currently in NS</Label>
+          </div>
+          <Button type="submit" variant="outline" size="sm">Apply</Button>
+        </form>
       </div>
       
       {/* Status Tag Filters */}

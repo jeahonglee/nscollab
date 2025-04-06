@@ -125,16 +125,24 @@ export async function updateProfile(formData: FormData, userId: string) {
 export async function addNsStay(formData: FormData, userId: string) {
   const supabase = await createClient();
 
-  // Handle month toggle approach
-  const year = formData.get('year') as string;
-  const month = formData.get('month') as string;
+  // Determine which format we're using - direct start_month or year/month combo
+  let formattedDate: string;
 
-  if (!year || !month) {
-    throw new Error('Year and month are required');
+  if (formData.has('start_month')) {
+    // New approach - direct start_month parameter (already formatted as YYYY-MM-DD)
+    formattedDate = formData.get('start_month') as string;
+  } else {
+    // Legacy approach - separate year and month
+    const year = formData.get('year') as string;
+    const month = formData.get('month') as string;
+
+    if (!year || !month) {
+      throw new Error('Either start_month or year and month are required');
+    }
+
+    // Format as YYYY-MM-01 for proper date format
+    formattedDate = `${year}-${month.padStart(2, '0')}-01`;
   }
-
-  // Format as YYYY-MM-01 for proper date format
-  const formattedDate = `${year}-${month.padStart(2, '0')}-01`;
 
   // Add the new NS stay as a single month
   // We'll continue to use start_month since active_months doesn't exist in the table yet
@@ -154,8 +162,9 @@ export async function addNsStay(formData: FormData, userId: string) {
 export async function deleteNsStay(formData: FormData, userId: string) {
   const supabase = await createClient();
 
-  // Check for stayId to decide which approach to use
-  const stayId = formData.get('stayId') as string;
+  // Check for stayId or stay_id to decide which approach to use
+  // Support both parameter formats for backward compatibility
+  const stayId = formData.get('stayId') as string || formData.get('stay_id') as string;
 
   if (stayId) {
     // Delete a specific stay by ID
