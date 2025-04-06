@@ -2,12 +2,17 @@ import { createClient } from '@/utils/supabase/server';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { IdeaCard } from '@/components/ideas/idea-card';
 import { IdeaWithRelations } from '@/lib/supabase/types';
 import { IDEA_STATUSES } from '@/lib/supabase/types';
-import { Plus, Filter } from 'lucide-react';
+import { Plus } from 'lucide-react';
 
-export default async function IdeasPage() {
+export default async function IdeasPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ status?: string }>  
+}) {
   const supabase = await createClient();
   
   // Check if user is authenticated
@@ -16,8 +21,11 @@ export default async function IdeasPage() {
     redirect('/sign-in');
   }
   
-  // Fetch ideas with submitter profiles
-  const { data: ideas, error } = await supabase
+  // Get filter parameter
+  const statusFilter = (await searchParams).status || '';
+  
+  // Build query
+  let query = supabase
     .from('ideas')
     .select(`
       *,
@@ -31,26 +39,25 @@ export default async function IdeasPage() {
         )
       )
     `)
-    .eq('is_archived', false)
-    .order('last_activity_at', { ascending: false });
+    .eq('is_archived', false);
+  
+  // Apply status filter if present
+  if (statusFilter) {
+    query = query.eq('status', statusFilter);
+  }
+  
+  // Always sort by most recent activity
+  query = query.order('last_activity_at', { ascending: false });
+  
+  // Execute query
+  const { data: ideas, error } = await query;
   
   if (error) {
     console.error('Error fetching ideas:', error);
   }
   
-  // Group ideas by status
-  const ideaGroups: Record<string, IdeaWithRelations[]> = {};
-  IDEA_STATUSES.forEach(status => {
-    ideaGroups[status] = [];
-  });
-
-  // Fill groups with ideas
-  ideas?.forEach(idea => {
-    const status = idea.status as string;
-    if (ideaGroups[status]) {
-      ideaGroups[status].push(idea as IdeaWithRelations);
-    }
-  });
+  // Prepare ideas list (now no grouping needed)
+  const ideasList = ideas as IdeaWithRelations[] || [];
 
   return (
     <div className="space-y-6">
@@ -63,10 +70,6 @@ export default async function IdeasPage() {
         </div>
         
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm">
-            <Filter className="h-4 w-4 mr-2" />
-            Filter
-          </Button>
           <Button asChild>
             <Link href="/ideas/new">
               <Plus className="h-4 w-4 mr-2" />
@@ -76,24 +79,42 @@ export default async function IdeasPage() {
         </div>
       </div>
       
-      <div className="space-y-8">
-        {IDEA_STATUSES.map(status => {
-          // Skip empty groups
-          if (ideaGroups[status]?.length === 0) return null;
-          
-          return (
-            <div key={status} className="space-y-4">
-              <h2 className="text-xl font-semibold">{status}</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {ideaGroups[status]?.map(idea => (
-                  <IdeaCard key={idea.id} idea={idea} />
-                ))}
-              </div>
-            </div>
-          );
-        })}
+      {/* Status filter badges */}
+      <div className="flex flex-wrap gap-2 mb-6">
+        {statusFilter && (
+          <Badge variant="secondary" className="gap-1">
+            {statusFilter}
+            <a 
+              href="/ideas" 
+              className="ml-1 hover:text-destructive"
+              aria-label="Remove status filter"
+            >
+              ×
+            </a>
+          </Badge>
+        )}
         
-        {Object.values(ideaGroups).flat().length === 0 && (
+        {!statusFilter && IDEA_STATUSES.map(status => (
+          <a key={status} href={`/ideas?status=${encodeURIComponent(status)}`}>
+            <Badge 
+              variant="outline" 
+              className="hover:bg-accent cursor-pointer"
+            >
+              {status}
+            </Badge>
+          </a>
+        ))}
+      </div>
+      
+      {/* Ideas list */}
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {ideasList.map(idea => (
+            <IdeaCard key={idea.id} idea={idea} />
+          ))}
+        </div>
+        
+        {ideasList.length === 0 && (
           <div className="text-center p-12 border rounded-lg">
             <h3 className="text-lg font-medium">No ideas yet</h3>
             <p className="text-muted-foreground mb-4">
