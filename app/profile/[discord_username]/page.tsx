@@ -82,7 +82,7 @@ export default async function ProfilePage({
     )
     .eq('user_id', profile.id)) as { data: IdeaMembership[] | null };
 
-  console.log('Idea memberships:', ideaMemberships); // For debugging
+  // console.log('Idea memberships:', ideaMemberships); // For debugging
 
   // Get initials for avatar fallback
   const getInitials = (name: string | null) => {

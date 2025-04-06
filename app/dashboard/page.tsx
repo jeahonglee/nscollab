@@ -3,23 +3,11 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  formatDistanceToNow,
-  subWeeks,
-  startOfWeek,
-  format,
-} from 'date-fns';
-import {
-  MessageSquare,
-  Lightbulb,
-  Clock,
-  ChevronDown,
-} from 'lucide-react';
+import { formatDistanceToNow, subWeeks, startOfWeek, format } from 'date-fns';
+import { MessageSquare, Lightbulb, Clock, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 // Define types to match Supabase response format
-
-
 
 export default async function DashboardPage({
   searchParams,
@@ -75,7 +63,7 @@ export default async function DashboardPage({
   }
 
   // Log the data structure for debugging
-  console.log('Data structure:', recentComments?.[0]);
+  // console.log('Data structure:', recentComments?.[0]);
 
   // Define the processed comment type
   type ProcessedComment = {

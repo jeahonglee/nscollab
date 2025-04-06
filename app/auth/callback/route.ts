@@ -18,17 +18,6 @@ export async function GET(request: Request) {
     if (data?.user && !error) {
       // Get user ID from auth
       const userId = data.user.id;
-
-      // COMPLETE Discord user debug logging
-      console.log('===== DISCORD AUTH DATA =====');
-      console.log('Full user object:', JSON.stringify(data.user, null, 2));
-      console.log(
-        'Full user metadata:',
-        JSON.stringify(data.user.user_metadata, null, 2)
-      );
-      console.log('Raw identities:', data.user.identities);
-      console.log('==============================');
-
       // Get user metadata from Discord OAuth
       // Try all possible places Discord might store the username
       const rawDiscordUsername =
@@ -52,14 +41,14 @@ export async function GET(request: Request) {
 
       const avatarUrl = data.user.user_metadata?.avatar_url;
 
-      console.log('Processed auth data:', {
-        userId,
-        rawDiscordUsername,
-        cleanedDiscordUsername: discordUsername,
-        globalName,
-        email,
-        avatarUrl,
-      });
+      // console.log('Processed auth data:', {
+      //   userId,
+      //   rawDiscordUsername,
+      //   cleanedDiscordUsername: discordUsername,
+      //   globalName,
+      //   email,
+      //   avatarUrl,
+      // });
 
       // Always try to create/update profile, even if username appears empty
       try {
@@ -80,12 +69,12 @@ export async function GET(request: Request) {
         // Update or create profile with Discord data
         if (existingProfile) {
           // Update existing profile
-          console.log(
-            'Updating existing profile for user:',
-            userId,
-            'with username:',
-            discordUsername
-          );
+          // console.log(
+          //   'Updating existing profile for user:',
+          //   userId,
+          //   'with username:',
+          //   discordUsername
+          // );
           dbResult = await supabase
             .from('profiles')
             .update({
@@ -98,12 +87,12 @@ export async function GET(request: Request) {
             .eq('id', userId);
         } else {
           // Create new profile
-          console.log(
-            'Creating new profile for user:',
-            userId,
-            'with username:',
-            discordUsername
-          );
+          // console.log(
+          //   'Creating new profile for user:',
+          //   userId,
+          //   'with username:',
+          //   discordUsername
+          // );
           dbResult = await supabase.from('profiles').insert({
             id: userId,
             discord_username: discordUsername,
@@ -118,7 +107,7 @@ export async function GET(request: Request) {
         if (dbResult.error) {
           console.error('Error creating/updating profile:', dbResult.error);
         } else {
-          console.log('Profile successfully created/updated for user:', userId);
+          // console.log('Profile successfully created/updated for user:', userId);
         }
       } catch (err) {
         console.error('Unexpected error in profile creation/update:', err);
@@ -131,7 +120,7 @@ export async function GET(request: Request) {
   }
 
   // URL to redirect to after sign up process completes
-  // Use VERCEL_URL for production or fall back to the request origin
-  const siteUrl = process.env.VERCEL_URL || origin;
+  // Use NEXT_PUBLIC_SITE_URL for production or fall back to the request origin
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || origin;
   return NextResponse.redirect(`${siteUrl}/dashboard`);
 }
