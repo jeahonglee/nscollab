@@ -3,7 +3,6 @@ import { Button } from '@/components/ui/button';
 import { createClient } from '@/utils/supabase/server';
 import UserMenu from '@/components/layout/user-menu';
 import NSLogo from '@/components/ns-logo';
-import ThemeSwitcherWrapper from '@/components/layout/theme-switcher-wrapper';
 
 export default async function NavBar() {
   const supabase = await createClient();
@@ -36,7 +35,6 @@ export default async function NavBar() {
             </Link>
           </nav>
           <div className="flex items-center gap-2">
-            <ThemeSwitcherWrapper />
             {user ? (
               <UserMenu user={user} />
             ) : (

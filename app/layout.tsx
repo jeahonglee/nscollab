@@ -4,6 +4,7 @@ import { hasEnvVars } from '@/utils/supabase/check-env-vars';
 import { EnvVarWarning } from '@/components/env-var-warning';
 import NavBar from '@/components/layout/nav-bar';
 import './globals.css';
+import ThemeSwitcherWrapper from '@/components/layout/theme-switcher-wrapper';
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
@@ -45,11 +46,12 @@ export default function RootLayout({
             </div>
 
             <footer className="border-t border-border py-6 md:py-0">
-              <div className="container flex flex-col items-center justify-between gap-4 md:h-16 md:flex-row">
+              <div className="container flex flex-col items-center justify-center gap-4 md:h-16 md:flex-row">
                 <p className="text-center text-sm leading-loose text-muted-foreground md:text-left">
                   &copy; {new Date().getFullYear()} Network School. All rights
                   reserved.
                 </p>
+                <ThemeSwitcherWrapper />
               </div>
             </footer>
           </main>
