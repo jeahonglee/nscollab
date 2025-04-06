@@ -5,9 +5,9 @@ import { ProfileWithRelations } from '@/lib/supabase/types';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 import { Search } from 'lucide-react';
+import { AutoSubmitSwitch } from '@/components/filter/auto-submit-switch';
+import { format } from 'date-fns';
 
 export default async function PeoplePage({
   searchParams,
@@ -52,12 +52,30 @@ export default async function PeoplePage({
   // Filter profiles based on search criteria and current NS status
   let filteredProfiles = allProfiles;
   
-  // If current_ns filter is active, only show people with active NS stays
+  // If current_ns filter is active, only show people with active NS stays in the current month
   if (currentNsOnly && filteredProfiles && filteredProfiles.length > 0) {
+    // Get current year and month in YYYY-MM format for string comparison
+    const now = new Date();
+    const currentYearMonth = format(now, 'yyyy-MM');
+    
     filteredProfiles = filteredProfiles.filter(profile => {
-      return profile.ns_stays && 
-             Array.isArray(profile.ns_stays) && 
-             profile.ns_stays.length > 0;
+      // Make sure profile has ns_stays and it's an array
+      if (!profile.ns_stays || !Array.isArray(profile.ns_stays) || profile.ns_stays.length === 0) {
+        return false;
+      }
+      
+      // Check if any of the stays match the current month
+      return profile.ns_stays.some((stay: any) => {
+        // Each stay has a start_month in YYYY-MM-DD format (e.g., 2025-04-01)
+        if (!stay.start_month || typeof stay.start_month !== 'string') {
+          return false;
+        }
+        
+        // Simple string comparison using just the YYYY-MM part of the date
+        // This avoids any issues with timezone or date parsing
+        const stayYearMonth = stay.start_month.substring(0, 7);
+        return stayYearMonth === currentYearMonth;
+      });
     });
   }
   
@@ -124,22 +142,12 @@ export default async function PeoplePage({
           <Button type="submit">Search</Button>
         </form>
         
-        <form className="flex items-center gap-2" action="/people" method="GET">
-          {/* Preserve existing search and tag parameters if they exist */}
-          {search && <input type="hidden" name="search" value={search} />}
-          {tag && <input type="hidden" name="tag" value={tag} />}
-          
-          <div className="flex items-center gap-2">
-            <Switch 
-              id="current-ns-filter" 
-              name="current_ns"
-              defaultChecked={currentNsOnly}
-              value="true"
-            />
-            <Label htmlFor="current-ns-filter">Currently in NS</Label>
-          </div>
-          <Button type="submit" variant="outline" size="sm">Apply</Button>
-        </form>
+        <AutoSubmitSwitch
+          id="current-ns-filter"
+          label="Currently in NS"
+          paramName="current_ns"
+          defaultChecked={currentNsOnly}
+        />
       </div>
       
       {/* Status Tag Filters */}
