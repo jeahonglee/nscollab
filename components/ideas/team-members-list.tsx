@@ -144,17 +144,19 @@ export function TeamMembersList({ ideaId, members, isOwner, currentUserId }: Tea
       {sortedMembers.map((member) => (
         <div key={member.id} className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Avatar className="h-8 w-8">
-              <AvatarImage
-                src={member.profile?.avatar_url || ''}
-                alt={member.profile?.full_name || ''}
-              />
-              <AvatarFallback>{getInitials(member.profile?.full_name)}</AvatarFallback>
-            </Avatar>
+            <Link href={`/profile/${member.profile?.discord_username}`}>
+              <Avatar className="h-8 w-8">
+                <AvatarImage
+                  src={member.profile?.avatar_url || ''}
+                  alt={member.profile?.full_name || ''}
+                />
+                <AvatarFallback>{getInitials(member.profile?.full_name)}</AvatarFallback>
+              </Avatar>
+            </Link>
             
             <div>
               <Link
-                href={`/profile/${member.profile?.id}`}
+                href={`/profile/${member.profile?.discord_username}`}
                 className="font-medium hover:underline"
               >
                 {member.profile?.full_name || 'Unknown'}

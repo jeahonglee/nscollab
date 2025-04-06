@@ -4,6 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { formatDistanceToNow } from 'date-fns';
+import Link from 'next/link';
 
 interface Comment {
   id: string;
@@ -14,6 +15,7 @@ interface Comment {
     id: string;
     full_name: string | null;
     avatar_url: string | null;
+    discord_username?: string | null;
   } | null;
 }
 
@@ -91,19 +93,40 @@ export function CommentsList({ ideaId, comments, currentUserId }: CommentsListPr
         {sortedComments.length > 0 ? (
           sortedComments.map((comment) => (
             <div key={comment.id} className="flex gap-4 pb-4 border-b last:border-0">
-              <Avatar className="h-8 w-8">
-                <AvatarImage
-                  src={comment.profile?.avatar_url || ''}
-                  alt={comment.profile?.full_name || ''}
-                />
-                <AvatarFallback>{getInitials(comment.profile?.full_name)}</AvatarFallback>
-              </Avatar>
+              {comment.profile?.discord_username ? (
+                <Link href={`/profile/${comment.profile.discord_username}`}>
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage
+                      src={comment.profile?.avatar_url || ''}
+                      alt={comment.profile?.full_name || ''}
+                    />
+                    <AvatarFallback>{getInitials(comment.profile?.full_name)}</AvatarFallback>
+                  </Avatar>
+                </Link>
+              ) : (
+                <Avatar className="h-8 w-8">
+                  <AvatarImage
+                    src={comment.profile?.avatar_url || ''}
+                    alt={comment.profile?.full_name || ''}
+                  />
+                  <AvatarFallback>{getInitials(comment.profile?.full_name)}</AvatarFallback>
+                </Avatar>
+              )}
               
               <div className="flex-1">
                 <div className="flex justify-between items-center mb-2">
                   <div className="flex items-center gap-2">
                     <span className="font-medium">
-                      {comment.profile?.full_name || 'Anonymous'}
+                      {comment.profile?.discord_username ? (
+                        <Link
+                          href={`/profile/${comment.profile.discord_username}`}
+                          className="hover:underline"
+                        >
+                          {comment.profile.full_name || 'Anonymous'}
+                        </Link>
+                      ) : (
+                        comment.profile?.full_name || 'Anonymous'
+                      )}
                     </span>
                     <span className="text-xs text-muted-foreground">
                       {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
