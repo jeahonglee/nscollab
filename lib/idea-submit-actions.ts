@@ -15,7 +15,7 @@ export async function submitIdea(formData: FormData, userId: string) {
   
   // Get looking_for tags
   const lookingForTags = LOOKING_FOR_TAGS.filter(tag => 
-    formData.get(`looking-for-${tag.replace(/\\s/g, '-').toLowerCase()}`) === 'on'
+    formData.get(`looking-for-${tag.replace(/\s/g, '-').toLowerCase()}`) === 'on'
   );
   
   // Create idea in database

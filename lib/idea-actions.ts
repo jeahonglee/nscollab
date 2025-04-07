@@ -62,11 +62,11 @@ export async function updateIdea(formData: FormData, ideaId: string) {
   
   // Handle looking_for_tags field
   const lookingForTags = LOOKING_FOR_TAGS.filter((tag: LookingForTag) => 
-    formData.get(`looking-for-${tag.replace(/\\s/g, '-').toLowerCase()}`) === 'on'
+    formData.get(`looking-for-${tag.replace(/\s/g, '-').toLowerCase()}`) === 'on'
   );
   
   // Only update if the form has looking_for_tags checkboxes
-  if (LOOKING_FOR_TAGS.some((tag: LookingForTag) => formData.has(`looking-for-${tag.replace(/\\s/g, '-').toLowerCase()}`))) {
+  if (LOOKING_FOR_TAGS.some((tag: LookingForTag) => formData.has(`looking-for-${tag.replace(/\s/g, '-').toLowerCase()}`))) {
     const oldTags = currentIdea.looking_for_tags || [];
     const newTags = lookingForTags.length > 0 ? lookingForTags : [];
     

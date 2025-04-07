@@ -454,15 +454,18 @@ export default function ProfileForm({ user, profile }: ProfileFormProps) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
                 {STATUS_TAGS.map((tag) => {
                   const id = `status-${tag.replace(/\s/g, '-').toLowerCase()}`;
-                  const isChecked = profile.status_tags 
-                    ? profile.status_tags.includes(tag) 
-                    : false;
+                  // Make the check more robust by ensuring status_tags is an array
+                  // and do a case-insensitive comparison
+                  const statusTags = Array.isArray(profile.status_tags) ? profile.status_tags : [];
+                  const isChecked = statusTags.some(
+                    (statusTag) => statusTag && statusTag.toLowerCase() === tag.toLowerCase()
+                  );
                   
                   return (
                     <div key={id} className="flex items-center space-x-2">
                       <Checkbox 
                         id={id} 
-                        name={id}
+                        name={`status-${tag.replace(/\s/g, '-').toLowerCase()}`}
                         defaultChecked={isChecked} 
                       />
                       <Label htmlFor={id} className="font-normal">{tag}</Label>

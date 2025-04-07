@@ -114,7 +114,7 @@ export function IdeaEditForm({ idea }: IdeaEditFormProps) {
                     <div key={id} className="flex items-center space-x-2">
                       <Checkbox 
                         id={id} 
-                        name={id}
+                        name={`looking-for-${tag.replace(/\s/g, '-').toLowerCase()}`}
                         defaultChecked={isChecked}
                       />
                       <Label htmlFor={id} className="font-normal">{tag}</Label>

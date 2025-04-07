@@ -110,7 +110,7 @@ export function IdeaForm({ user }: IdeaFormProps) {
                     <div key={id} className="flex items-center space-x-2">
                       <Checkbox 
                         id={id} 
-                        name={id}
+                        name={`looking-for-${tag.replace(/\s/g, '-').toLowerCase()}`}
                       />
                       <Label htmlFor={id} className="font-normal">{tag}</Label>
                     </div>

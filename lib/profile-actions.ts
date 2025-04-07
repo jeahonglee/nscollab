@@ -3,6 +3,7 @@
 import { createClient } from '@/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
+import { STATUS_TAGS } from '@/lib/supabase/types';
 
 export async function updateProfile(formData: FormData, userId: string) {
   const supabase = await createClient();
@@ -74,21 +75,15 @@ export async function updateProfile(formData: FormData, userId: string) {
 
   // Handle status tags
   const statusTags: string[] = [];
-  // Get all checkboxes from STATUS_TAGS list
-  for (const pair of formData.entries()) {
-    const [name, value] = pair;
-    if (name.startsWith('status-') && value === 'on') {
-      // Convert from status-has-full-time-job format to "Has Full-Time Job"
-      const tag = name
-        .replace('status-', '')
-        .split('-')
-        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ');
-      statusTags.push(tag);
+  // Iterate through STATUS_TAGS and check if each tag's checkbox is checked
+  for (const tag of STATUS_TAGS) {
+    const id = `status-${tag.replace(/\s/g, '-').toLowerCase()}`;
+    if (formData.get(id) === 'on') {
+      statusTags.push(tag); // Push the exact tag from STATUS_TAGS, not a transformed version
     }
   }
-  updateData.status_tags =
-    statusTags.length > 0 ? statusTags : currentProfile.status_tags;
+  // If no tags are selected, use an empty array instead of keeping old tags
+  updateData.status_tags = statusTags;
 
   // Handle custom links (new field)
   const customLinksCount = parseInt(
