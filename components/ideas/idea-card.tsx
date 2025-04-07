@@ -2,7 +2,12 @@ import Link from 'next/link';
 import { IdeaWithRelations } from '@/lib/supabase/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+} from '@/components/ui/card';
 import { formatDistanceToNow } from 'date-fns';
 
 interface IdeaCardProps {
@@ -14,7 +19,7 @@ export function IdeaCard({ idea }: IdeaCardProps) {
   const lastActivity = formatDistanceToNow(new Date(idea.last_activity_at), {
     addSuffix: true,
   });
-  
+
   // Get initials for avatar fallback
   const getInitials = (name: string | null | undefined) => {
     if (!name) return 'NS';
@@ -33,9 +38,7 @@ export function IdeaCard({ idea }: IdeaCardProps) {
           <Badge variant="outline" className="mb-2">
             {idea.status}
           </Badge>
-          <span className="text-xs text-muted-foreground">
-            {lastActivity}
-          </span>
+          <span className="text-xs text-muted-foreground">{lastActivity}</span>
         </div>
         <Link
           href={`/ideas/${idea.id}`}
@@ -48,7 +51,7 @@ export function IdeaCard({ idea }: IdeaCardProps) {
         <p className="text-sm text-muted-foreground line-clamp-3">
           {idea.description}
         </p>
-        
+
         {idea.looking_for_tags && idea.looking_for_tags.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-3">
             {idea.looking_for_tags.map((tag) => (
@@ -59,39 +62,46 @@ export function IdeaCard({ idea }: IdeaCardProps) {
           </div>
         )}
       </CardContent>
-      <CardFooter className="pt-2 border-t">
+      <CardFooter className="py-3 border-t">
         <div className="w-full flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Avatar className="h-6 w-6">
+          <div className="flex items-center gap-2.5">
+            <Avatar className="h-7 w-7 ring-1 ring-muted/30">
               <AvatarImage
                 src={idea.profile?.avatar_url || ''}
-                alt={idea.profile?.full_name || ''}
+                alt={idea.profile?.full_name || 'Unknown'}
               />
-              <AvatarFallback>
-                {getInitials(idea.profile?.full_name)}
+              <AvatarFallback className="text-xs">
+                {idea.submitter_user_id
+                  ? getInitials(idea.profile?.full_name)
+                  : 'NS'}
               </AvatarFallback>
             </Avatar>
-            <span className="text-xs">
-              {idea.profile?.full_name || 'Anonymous'}
+            <span className="text-xs font-medium">
+              {idea.submitter_user_id
+                ? idea.profile?.full_name || 'Anonymous'
+                : 'Unknown'}
             </span>
           </div>
-          
+
           {idea.members && idea.members.length > 0 && (
-            <div className="flex -space-x-2">
+            <div className="flex -space-x-2 ml-2">
               {idea.members.slice(0, 3).map((member) => (
-                <Avatar key={member.id} className="h-6 w-6 border-2 border-background">
+                <Avatar
+                  key={member.id}
+                  className="h-7 w-7 border-2 border-background ring-1 ring-muted/30"
+                >
                   <AvatarImage
                     src={member.profile?.avatar_url || ''}
                     alt={member.profile?.full_name || ''}
                   />
-                  <AvatarFallback>
+                  <AvatarFallback className="text-xs">
                     {getInitials(member.profile?.full_name)}
                   </AvatarFallback>
                 </Avatar>
               ))}
-              
+
               {idea.members.length > 3 && (
-                <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center text-xs">
+                <div className="h-7 w-7 rounded-full bg-primary/10 border-2 border-background flex items-center justify-center text-xs font-medium text-primary">
                   +{idea.members.length - 3}
                 </div>
               )}

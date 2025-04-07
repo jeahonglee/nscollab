@@ -104,7 +104,7 @@ export type Database = {
           created_at: string;
           updated_at: string;
           last_activity_at: string;
-          submitter_user_id: string;
+          submitter_user_id: string | null;
           title: string;
           description: string;
           status: string;
@@ -116,7 +116,7 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
           last_activity_at?: string;
-          submitter_user_id: string;
+          submitter_user_id: string | null;
           title: string;
           description: string;
           status?: string;

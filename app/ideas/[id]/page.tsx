@@ -184,31 +184,45 @@ export default async function IdeaPage({
             </CardHeader>
             <CardContent className="pt-0">
               <div className="flex items-center gap-3">
-                <Link
-                  href={`/profile/${ideaWithRelations.profile?.discord_username}`}
-                >
-                  <Avatar>
-                    <AvatarImage
-                      src={ideaWithRelations.profile?.avatar_url || ''}
-                      alt={ideaWithRelations.profile?.full_name || ''}
-                    />
-                    <AvatarFallback>
-                      {getInitials(ideaWithRelations.profile?.full_name)}
-                    </AvatarFallback>
-                  </Avatar>
-                </Link>
-                <div>
+                {ideaWithRelations.submitter_user_id &&
+                ideaWithRelations.profile ? (
                   <Link
                     href={`/profile/${ideaWithRelations.profile?.discord_username}`}
-                    className="font-medium hover:underline"
                   >
-                    {ideaWithRelations.profile?.full_name}
+                    <Avatar>
+                      <AvatarImage
+                        src={ideaWithRelations.profile?.avatar_url || ''}
+                        alt={ideaWithRelations.profile?.full_name || ''}
+                      />
+                      <AvatarFallback>
+                        {getInitials(ideaWithRelations.profile?.full_name)}
+                      </AvatarFallback>
+                    </Avatar>
                   </Link>
+                ) : (
+                  <Avatar>
+                    <AvatarFallback>NS</AvatarFallback>
+                  </Avatar>
+                )}
+                <div>
+                  {ideaWithRelations.submitter_user_id &&
+                  ideaWithRelations.profile ? (
+                    <>
+                      <Link
+                        href={`/profile/${ideaWithRelations.profile?.discord_username}`}
+                        className="font-medium hover:underline"
+                      >
+                        {ideaWithRelations.profile?.full_name}
+                      </Link>
 
-                  {ideaWithRelations.profile?.discord_username && (
-                    <p className="text-sm text-muted-foreground">
-                      {ideaWithRelations.profile.discord_username}
-                    </p>
+                      {ideaWithRelations.profile?.discord_username && (
+                        <p className="text-sm text-muted-foreground">
+                          {ideaWithRelations.profile.discord_username}
+                        </p>
+                      )}
+                    </>
+                  ) : (
+                    <span className="font-medium">Unknown</span>
                   )}
                 </div>
               </div>
