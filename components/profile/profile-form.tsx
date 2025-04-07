@@ -11,10 +11,12 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Plus, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 // Import server actions from a separate file
 // Using direct import as aliases might be configured differently
 import { updateProfile, addNsStay, deleteNsStay } from '@/lib/profile-actions';
+import { LoadingOverlay } from '@/components/ui/loading-overlay';
 
 interface ProfileFormProps {
   user: User;
@@ -28,8 +30,11 @@ export default function ProfileForm({ user, profile }: ProfileFormProps) {
     return currentYear;
   });
   
-  // State to track if form is submitting
+  // State to track if form is submitting or adding/deleting NS stays
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAddingNsStay, setIsAddingNsStay] = useState(false);
+  const [isDeletingNsStay, setIsDeletingNsStay] = useState(false);
+  const router = useRouter();
   
   // Initialize custom links from profile or empty array
   const [customLinks, setCustomLinks] = useState<CustomLink[]>(
@@ -44,30 +49,37 @@ export default function ProfileForm({ user, profile }: ProfileFormProps) {
       setIsSubmitting(true);
       // Use imported server action
       await updateProfile(formData, user.id);
-      setIsSubmitting(false);
+      router.refresh();
     } catch (error) {
       console.error('Error updating profile:', error);
+    } finally {
       setIsSubmitting(false);
     }
   };
 
   // Client-side wrapper for addNsStay server action
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleAddNsStay = async (formData: FormData) => {
     try {
+      setIsAddingNsStay(true);
       await addNsStay(formData, user.id);
+      router.refresh();
     } catch (error) {
       console.error('Error adding NS stay:', error);
+    } finally {
+      setIsAddingNsStay(false);
     }
   };
 
   // Client-side wrapper for deleteNsStay server action
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleDeleteNsStay = async (formData: FormData) => {
     try {
+      setIsDeletingNsStay(true);
       await deleteNsStay(formData, user.id);
+      router.refresh();
     } catch (error) {
       console.error('Error deleting NS stay:', error);
+    } finally {
+      setIsDeletingNsStay(false);
     }
   };
   
@@ -164,7 +176,28 @@ export default function ProfileForm({ user, profile }: ProfileFormProps) {
   };
 
   return (
-    <form action={handleUpdateProfile} className="space-y-6 w-full">
+    <>
+      <LoadingOverlay isLoading={isSubmitting} loadingText="Saving profile information..." />
+      <LoadingOverlay isLoading={isAddingNsStay} loadingText="Adding NS stay..." />
+      <LoadingOverlay isLoading={isDeletingNsStay} loadingText="Removing NS stay..." />
+      <form 
+        onSubmit={async (e) => {
+          e.preventDefault();
+          setIsSubmitting(true);
+          try {
+            const formData = new FormData(e.currentTarget);
+            await updateProfile(formData, user.id);
+            // Keep loading state active during navigation
+            router.refresh();
+            return; // Skip the finally block
+          } catch (error) {
+            console.error('Error updating profile:', error);
+            // Only reset loading state if there was an error
+            setIsSubmitting(false);
+          }
+        }} 
+        className="space-y-6 w-full"
+      >
       {/* Top save button */}
       <Button 
         type="submit" 
@@ -517,5 +550,6 @@ export default function ProfileForm({ user, profile }: ProfileFormProps) {
         {isSubmitting ? "Saving..." : "Save Profile"}
       </Button>
     </form>
+    </>
   );
 }

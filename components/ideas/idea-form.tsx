@@ -1,7 +1,8 @@
+"use client";
+
 import { User } from '@supabase/supabase-js';
-import { createClient } from '@/utils/supabase/server';
-import { revalidatePath } from 'next/cache';
-import { redirect } from 'next/navigation';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -10,83 +11,55 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent } from '@/components/ui/card';
 import { IDEA_STATUSES, LOOKING_FOR_TAGS } from '@/lib/supabase/types';
+import { submitIdea } from '@/lib/idea-submit-actions';
+import { LoadingOverlay } from '@/components/ui/loading-overlay';
 
 interface IdeaFormProps {
   user: User;
 }
 
 export function IdeaForm({ user }: IdeaFormProps) {
-  // Server action to submit a new idea
-  async function submitIdea(formData: FormData) {
-    'use server';
-    
-    const supabase = await createClient();
-    
-    // Get form data
-    const title = formData.get('title') as string;
-    const description = formData.get('description') as string;
-    const status = formData.get('status') as string;
-    
-    // Get looking_for tags
-    const lookingForTags = LOOKING_FOR_TAGS.filter(tag => 
-      formData.get(`looking-for-${tag.replace(/\s/g, '-').toLowerCase()}`) === 'on'
-    );
-    
-    // Create idea in database
-    const { data: idea, error } = await supabase
-      .from('ideas')
-      .insert({
-        submitter_user_id: user.id,
-        title,
-        description,
-        status,
-        looking_for_tags: lookingForTags.length > 0 ? lookingForTags : null,
-        is_archived: false,
-        last_activity_at: new Date().toISOString(),
-      })
-      .select()
-      .single();
-    
-    if (error) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const router = useRouter();
+
+  // Client-side wrapper for server action
+  // Client-side wrapper for form submission
+  async function handleSubmitIdea(formData: FormData) {
+    try {
+      setIsSubmitting(true);
+      const ideaId = await submitIdea(formData, user.id);
+      router.push(`/ideas/${ideaId}`);
+    } catch (error) {
       console.error('Error submitting idea:', error);
-      // Handle error (in a real app, you'd want to display this to the user)
-      return;
+      // In a real app, you'd want to display this error to the user
+    } finally {
+      setIsSubmitting(false);
     }
-    
-    // Add the creator as the first team member with "Owner" role
-    const { error: memberError } = await supabase
-      .from('idea_members')
-      .insert({
-        idea_id: idea.id,
-        user_id: user.id,
-        role: 'Owner',
-      });
-    
-    if (memberError) {
-      console.error('Error adding owner to idea:', memberError);
-    }
-    
-    // Add a welcome comment
-    const { error: commentError } = await supabase
-      .from('idea_comments')
-      .insert({
-        idea_id: idea.id,
-        user_id: user.id,
-        comment_text: '🚀 Created this idea! Looking forward to making it happen.',
-      });
-    
-    if (commentError) {
-      console.error('Error adding welcome comment:', commentError);
-    }
-    
-    revalidatePath('/ideas');
-    redirect(`/ideas/${idea.id}`);
-  }
+  };
 
   return (
     <Card>
+      <LoadingOverlay isLoading={isSubmitting} loadingText="Submitting idea..." />
       <CardContent className="pt-6">
-        <form action={submitIdea} className="space-y-6">
+        <form
+          onSubmit={async (e) => {
+            e.preventDefault();
+            setIsSubmitting(true);
+            try {
+              const formData = new FormData(e.currentTarget);
+              const ideaId = await submitIdea(formData, user.id);
+              // Don't reset loading state before redirect
+              // This maintains loading overlay during navigation
+              router.push(`/ideas/${ideaId}`);
+              return; // Skip the finally block
+            } catch (error) {
+              console.error('Error submitting idea:', error);
+              // Only reset loading state if there was an error
+              setIsSubmitting(false);
+            }
+          }}
+          className="space-y-6"
+        >
           <div className="grid gap-4">
             <div className="grid gap-2">
               <Label htmlFor="title">Idea Title</Label>
@@ -151,7 +124,9 @@ export function IdeaForm({ user }: IdeaFormProps) {
             <Button type="button" variant="outline" asChild>
               <Link href="/ideas">Cancel</Link>
             </Button>
-            <Button type="submit">Submit Idea</Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Submitting..." : "Submit Idea"}
+            </Button>
           </div>
         </form>
       </CardContent>

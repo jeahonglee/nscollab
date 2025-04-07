@@ -1,10 +1,15 @@
-import { createClient } from '@/utils/supabase/server';
-import { revalidatePath } from 'next/cache';
+"use client";
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { formatDistanceToNow } from 'date-fns';
 import Link from 'next/link';
+import { LoadingOverlay } from '@/components/ui/loading-overlay';
+// Import server actions from comment-actions.ts
+import { addComment, deleteComment } from '@/lib/comment-actions';
 
 interface Comment {
   id: string;
@@ -30,70 +35,45 @@ export function CommentsList({
   comments,
   currentUserId,
 }: CommentsListProps) {
+  const router = useRouter();
+  const [isAddingComment, setIsAddingComment] = useState(false);
+  const [isDeletingComment, setIsDeletingComment] = useState<string | null>(null);
+  
   // Sort comments by creation time (newest first)
   const sortedComments = [...comments].sort(
     (a, b) =>
       new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   );
 
-  // Server action to add a new comment
-  async function addComment(formData: FormData) {
-    'use server';
-
-    const commentText = formData.get('comment') as string;
-    if (!commentText.trim()) return;
-
-    const supabase = await createClient();
-
-    // Add comment
-    const { error } = await supabase.from('idea_comments').insert({
-      idea_id: ideaId,
-      user_id: currentUserId,
-      comment_text: commentText,
-    });
-
-    if (error) {
+  // Client wrapper for add comment action
+  async function handleAddComment(formData: FormData) {
+    try {
+      setIsAddingComment(true);
+      await addComment(formData, ideaId, currentUserId);
+      // Clear the input field after successful submission
+      (document.querySelector('textarea[name="comment"]') as HTMLTextAreaElement).value = '';
+      router.refresh();
+    } catch (error) {
       console.error('Error adding comment:', error);
-      return;
+    } finally {
+      setIsAddingComment(false);
     }
-
-    // Update last activity timestamp
-    await supabase
-      .from('ideas')
-      .update({ last_activity_at: new Date().toISOString() })
-      .eq('id', ideaId);
-
-    revalidatePath(`/ideas/${ideaId}`);
   }
 
-  // Server action to delete a comment
-  async function deleteComment(formData: FormData) {
-    'use server';
-
+  // Client wrapper for delete comment action
+  async function handleDeleteComment(formData: FormData) {
     const commentId = formData.get('commentId') as string;
     if (!commentId) return;
-
-    const supabase = await createClient();
-
-    // Delete the comment
-    const { error } = await supabase
-      .from('idea_comments')
-      .delete()
-      .eq('id', commentId)
-      .eq('user_id', currentUserId); // Security check: ensure only the comment owner can delete
-
-    if (error) {
+    
+    try {
+      setIsDeletingComment(commentId);
+      await deleteComment(formData, ideaId, currentUserId);
+      router.refresh();
+    } catch (error) {
       console.error('Error deleting comment:', error);
-      return;
+    } finally {
+      setIsDeletingComment(null);
     }
-
-    // Update last activity timestamp
-    await supabase
-      .from('ideas')
-      .update({ last_activity_at: new Date().toISOString() })
-      .eq('id', ideaId);
-
-    revalidatePath(`/ideas/${ideaId}`);
   }
 
   // Get initials for avatar fallback
@@ -110,15 +90,36 @@ export function CommentsList({
   return (
     <div className="space-y-6">
       {/* New Comment Form */}
-      <form action={addComment} className="flex flex-col gap-2">
+      <form 
+        onSubmit={async (e) => {
+          e.preventDefault();
+          const form = e.target as HTMLFormElement;
+          setIsAddingComment(true);
+          try {
+            const formData = new FormData(form);
+            await addComment(formData, ideaId, currentUserId);
+            // Reset the form instead of using querySelector
+            form.reset();
+            router.refresh();
+          } catch (error) {
+            console.error('Error adding comment:', error);
+          } finally {
+            setIsAddingComment(false);
+          }
+        }} 
+        className="flex flex-col gap-2"
+      >
         <Textarea
           name="comment"
           placeholder="Add your thoughts or questions..."
           rows={3}
         />
         <div className="flex justify-end">
-          <Button type="submit">Add Comment</Button>
+          <Button type="submit" disabled={isAddingComment}>
+            {isAddingComment ? 'Adding...' : 'Add Comment'}
+          </Button>
         </div>
+        <LoadingOverlay isLoading={isAddingComment} loadingText="Adding comment..." />
       </form>
 
       {/* Comments List */}
@@ -176,7 +177,24 @@ export function CommentsList({
                   </div>
 
                   {comment.user_id === currentUserId && (
-                    <form action={deleteComment}>
+                    <form 
+                      onSubmit={async (e) => {
+                        e.preventDefault();
+                        const form = e.target as HTMLFormElement;
+                        // Get the commentId from the parent component directly
+                        const commentId = comment.id;
+                        setIsDeletingComment(commentId);
+                        try {
+                          const formData = new FormData(form);
+                          await deleteComment(formData, ideaId, currentUserId);
+                          router.refresh();
+                        } catch (error) {
+                          console.error('Error deleting comment:', error);
+                        } finally {
+                          setIsDeletingComment(null);
+                        }
+                      }}
+                    >
                       <input
                         type="hidden"
                         name="commentId"
@@ -187,8 +205,9 @@ export function CommentsList({
                         size="sm"
                         className="h-6 px-2"
                         type="submit"
+                        disabled={isDeletingComment === comment.id}
                       >
-                        Delete
+                        {isDeletingComment === comment.id ? 'Deleting...' : 'Delete'}
                       </Button>
                     </form>
                   )}

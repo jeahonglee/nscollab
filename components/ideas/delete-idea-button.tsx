@@ -24,8 +24,10 @@ export function DeleteIdeaButton({ ideaId }: DeleteIdeaButtonProps) {
       const result = await deleteIdeaAction(ideaId);
 
       if (result.success) {
+        // Don't reset the loading state before redirect
+        // This ensures the button stays in loading state during navigation
         router.push('/ideas');
-        router.refresh();
+        return; // Skip the finally block
       } else {
         setError(result.error || 'Failed to delete idea');
         setIsConfirming(false);
@@ -33,9 +35,10 @@ export function DeleteIdeaButton({ ideaId }: DeleteIdeaButtonProps) {
     } catch (err) {
       console.error('Error deleting idea:', err);
       setError('An unexpected error occurred');
-    } finally {
-      setIsDeleting(false);
     }
+    
+    // Only reset loading state if we didn't redirect
+    setIsDeleting(false);
   };
 
   if (isConfirming) {
