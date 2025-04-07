@@ -1,104 +1,131 @@
-<a href="https://demo-nextjs-with-supabase.vercel.app/">
-  <img alt="Next.js and Supabase Starter Kit - the fastest way to build apps with Next.js and Supabase" src="https://demo-nextjs-with-supabase.vercel.app/opengraph-image.png">
-  <h1 align="center">Next.js and Supabase Starter Kit</h1>
+<a href="https://nscollab.com">
+  <h1 align="center">NS Collab Platform</h1>
 </a>
 
 <p align="center">
- The fastest way to build apps with Next.js and Supabase
+ A private platform for Network School (NS) members to connect, share ideas, form teams, and track projects.
 </p>
 
 <p align="center">
+  <a href="#overview"><strong>Overview</strong></a> ·
   <a href="#features"><strong>Features</strong></a> ·
-  <a href="#demo"><strong>Demo</strong></a> ·
-  <a href="#deploy-to-vercel"><strong>Deploy to Vercel</strong></a> ·
-  <a href="#clone-and-run-locally"><strong>Clone and run locally</strong></a> ·
-  <a href="#feedback-and-issues"><strong>Feedback and issues</strong></a>
-  <a href="#more-supabase-examples"><strong>More Examples</strong></a>
+  <a href="#technology-stack"><strong>Technology Stack</strong></a> ·
+  <a href="#setup-and-run-locally"><strong>Setup and Run Locally</strong></a> ·
+  <a href="#documentation"><strong>Documentation</strong></a>
 </p>
 <br/>
 
+## Overview
+
+NS Collab Platform aims to solve the challenge of persistent connection and collaboration within the Network School community. Current methods like meetups and Discord are ephemeral. This platform provides a dedicated space to:
+
+- Discover fellow NS members, their skills, and interests.
+- Catalog, track, and collaborate on project ideas.
+- Prevent redundant discovery efforts each cohort.
+- Facilitate meaningful connections and team formation.
+- Preserve institutional knowledge across NS cohorts.
+
+The platform is intended for **internal use by NS members only**.
+
 ## Features
 
-- Works across the entire [Next.js](https://nextjs.org) stack
-  - App Router
-  - Pages Router
-  - Middleware
-  - Client
-  - Server
-  - It just works!
-- supabase-ssr. A package to configure Supabase Auth to use cookies
-- Styling with [Tailwind CSS](https://tailwindcss.com)
-- Components with [shadcn/ui](https://ui.shadcn.com/)
-- Optional deployment with [Supabase Vercel Integration and Vercel deploy](#deploy-your-own)
-  - Environment variables automatically assigned to Vercel project
+Based on the [Product Requirements Document (PRD)](./docs/PRD.md), key features include:
 
-## Demo
+- **Secure Authentication:** Sign-in via Google, Apple, Discord using Supabase Auth.
+- **Detailed User Profiles:** Showcase skills, background, NS participation history, social links, project interests, and availability status (e.g., `Looking for Co-founder`, `Building for Fun`). Includes auto-generated `nspals.com` link.
+- **Idea Management:**
+  - Submit project ideas with descriptions.
+  - Track idea status (Ideation, Building, Launched, etc.).
+  - Form teams around ideas.
+  - Specify needs (e.g., `Need Designer`, `Need Frontend Dev`).
+  - Comment/update feed for ongoing discussion and activity tracking.
+- **Discovery:**
+  - **People Directory:** Searchable and filterable member list.
+  - **Idea Hub:** Browseable ideas via List, Kanban views with filtering/sorting.
+- **Privacy:** Platform access restricted to authenticated NS members.
 
-You can view a fully working demo at [demo-nextjs-with-supabase.vercel.app](https://demo-nextjs-with-supabase.vercel.app/).
+_(Refer to `docs/PRD.md` for full feature details)_
 
-## Deploy to Vercel
+## Technology Stack
 
-Vercel deployment will guide you through creating a Supabase account and project.
+- **Framework:** [Next.js](https://nextjs.org/) 15 (App Router)
+- **Backend & Database:** [Supabase](https://supabase.com/) (PostgreSQL, Auth, Storage)
+- **Language:** [TypeScript](https://www.typescriptlang.org/)
+- **Styling:** [Tailwind CSS](https://tailwindcss.com/)
+- **UI Components:** [shadcn/ui](https://ui.shadcn.com/)
+- **Deployment:** Targetting [Vercel](https://vercel.com/)
 
-After installation of the Supabase integration, all relevant environment variables will be assigned to the project so the deployment is fully functioning.
+## Setup and Run Locally
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&project-name=nextjs-with-supabase&repository-name=nextjs-with-supabase&demo-title=nextjs-with-supabase&demo-description=This+starter+configures+Supabase+Auth+to+use+cookies%2C+making+the+user%27s+session+available+throughout+the+entire+Next.js+app+-+Client+Components%2C+Server+Components%2C+Route+Handlers%2C+Server+Actions+and+Middleware.&demo-url=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2F&external-id=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&demo-image=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2Fopengraph-image.png)
+This project was initialized using the `create-next-app` template with Supabase integration (`--example with-supabase`).
 
-The above will also clone the Starter kit to your GitHub, you can clone that locally and develop locally.
+1.  **Prerequisites:**
 
-If you wish to just develop locally and not deploy to Vercel, [follow the steps below](#clone-and-run-locally).
+    - Node.js (Version recommended by Next.js 15)
+    - npm, yarn, or pnpm
+    - A [Supabase account and project](https://database.new).
 
-## Clone and run locally
+2.  **Clone the repository:**
 
-1. You'll first need a Supabase project which can be made [via the Supabase dashboard](https://database.new)
+    ```bash
+    git clone <your-repo-url>
+    cd <your-repo-directory> # e.g., cd ns-collab
+    ```
 
-2. Create a Next.js app using the Supabase Starter template npx command
+3.  **Install dependencies:**
 
-   ```bash
-   npx create-next-app --example with-supabase with-supabase-app
-   ```
+    ```bash
+    npm install
+    # or
+    yarn install
+    # or
+    pnpm install
+    ```
 
-   ```bash
-   yarn create next-app --example with-supabase with-supabase-app
-   ```
+4.  **Configure Environment Variables:**
 
-   ```bash
-   pnpm create next-app --example with-supabase with-supabase-app
-   ```
+    - Rename `.env.example` to `.env.local`.
+    - Update the file with your Supabase project details:
 
-3. Use `cd` to change into the app's directory
+      ```dotenv
+      NEXT_PUBLIC_SUPABASE_URL=[INSERT SUPABASE PROJECT URL]
+      NEXT_PUBLIC_SUPABASE_ANON_KEY=[INSERT SUPABASE PROJECT API ANON KEY]
 
-   ```bash
-   cd with-supabase-app
-   ```
+      # You will also need Client IDs and Secrets for your chosen OAuth providers
+      # Add them here as needed, e.g.:
+      # DISCORD_CLIENT_ID=...
+      # DISCORD_CLIENT_SECRET=...
+      ```
 
-4. Rename `.env.example` to `.env.local` and update the following:
+    - Find `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` in your [Supabase project's API settings](https://app.supabase.com/project/_/settings/api).
+    - **Important:** Ensure you configure the necessary OAuth providers (Google, Apple, Discord) within your Supabase project's Authentication settings, including setting up the correct Redirect URIs (e.g., `http://localhost:3000/auth/callback` for local development).
 
-   ```
-   NEXT_PUBLIC_SUPABASE_URL=[INSERT SUPABASE PROJECT URL]
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=[INSERT SUPABASE PROJECT API ANON KEY]
-   ```
+5.  **Set up Supabase Database:**
 
-   Both `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` can be found in [your Supabase project's API settings](https://app.supabase.com/project/_/settings/api)
+    - Apply the necessary database schema. You can use the SQL definitions potentially found in `supabase/migrations` (if using Supabase CLI) or define them manually via the Supabase dashboard. Refer to the schema defined in `docs/DEV-CHECKLIST.md` (Phase 2).
+    - **Crucially, set up Row Level Security (RLS) policies** as outlined in the `DEV-CHECKLIST.md` to ensure data privacy and proper access control.
 
-5. You can now run the Next.js local development server:
+6.  **Run the development server:**
 
-   ```bash
-   npm run dev
-   ```
+    ```bash
+    npm run dev
+    # or
+    yarn dev
+    # or
+    pnpm dev
+    ```
 
-   The starter kit should now be running on [localhost:3000](http://localhost:3000/).
+    The application should now be running on [http://localhost:3000](http://localhost:3000/).
 
-6. This template comes with the default shadcn/ui style initialized. If you instead want other ui.shadcn styles, delete `components.json` and [re-install shadcn/ui](https://ui.shadcn.com/docs/installation/next)
+7.  **(Optional) Shadcn/UI Styles:**
+    - This template comes with the default `shadcn/ui` style. If you want a different theme, delete `components.json` and re-initialize `shadcn/ui` following their [documentation](https://ui.shadcn.com/docs/installation/next).
 
-> Check out [the docs for Local Development](https://supabase.com/docs/guides/getting-started/local-development) to also run Supabase locally.
+## Documentation
 
-## Feedback and issues
+- **[Product Requirements (PRD)](./docs/PRD.md):** Detailed overview of the project's goals, features, and specifications.
+- **[Development Checklist](./docs/DEV-CHECKLIST.md):** Tracks the development progress and outlines technical implementation steps (including database schema and RLS). **Please update this checklist manually** to reflect the current state of completed tasks.
+- **[Setup Guide](./docs/SETUP-GUIDE.md):** Technical guide for setting up the project for development or deployment, including database schema SQL and RLS policies.
 
-Please file feedback and issues over on the [Supabase GitHub org](https://github.com/supabase/supabase/issues/new/choose).
+## Feedback and Issues
 
-## More Supabase examples
-
-- [Next.js Subscription Payments Starter](https://github.com/vercel/nextjs-subscription-payments)
-- [Cookie-based Auth and the Next.js 13 App Router (free course)](https://youtube.com/playlist?list=PL5S4mPUpp4OtMhpnp93EFSo42iQ40XjbF)
-- [Supabase Auth and the Next.js App Router](https://github.com/supabase/supabase/tree/master/examples/auth/nextjs)
+Please file feedback and issues specific to the NS Collab Platform within this repository's issue tracker. For issues related to the underlying Supabase integration or Next.js, refer to their respective official channels.
