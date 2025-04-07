@@ -36,7 +36,7 @@ export function ProfileCard({ profile, currentUserId }: ProfileCardProps) {
   // Extract Discord ID from avatar URL
   const extractDiscordId = (avatarUrl: string | null) => {
     if (!avatarUrl) return '';
-    const match = avatarUrl.match(/\/avatars\/([0-9]+)\//); 
+    const match = avatarUrl.match(/\/avatars\/([0-9]+)\//);
     return match ? match[1] : '';
   };
 
@@ -47,9 +47,10 @@ export function ProfileCard({ profile, currentUserId }: ProfileCardProps) {
   const socialLinks = [
     {
       icon: FaDiscord,
-      url: (profile.discord_username || extractDiscordId(profile.avatar_url))
-        ? `https://discord.com/users/${extractDiscordId(profile.avatar_url) || profile.discord_username}`
-        : null,
+      url:
+        profile.discord_username || extractDiscordId(profile.avatar_url)
+          ? `https://discord.com/users/${extractDiscordId(profile.avatar_url) || profile.discord_username}`
+          : null,
     },
     {
       icon: FaTwitter,
@@ -116,7 +117,6 @@ export function ProfileCard({ profile, currentUserId }: ProfileCardProps) {
               )}
             </div>
           </div>
-          {isCurrentUser && <Badge variant="outline">You</Badge>}
         </div>
       </CardHeader>
 
@@ -127,14 +127,14 @@ export function ProfileCard({ profile, currentUserId }: ProfileCardProps) {
 
         {profile.skills && profile.skills.length > 0 && (
           <div className="flex flex-wrap gap-1 mb-3">
-            {profile.skills.slice(0, 5).map((skill) => (
+            {profile.skills.slice(0, 9).map((skill) => (
               <Badge key={skill} variant="secondary" className="text-xs">
                 {skill}
               </Badge>
             ))}
-            {profile.skills.length > 5 && (
+            {profile.skills.length > 9 && (
               <Badge variant="secondary" className="text-xs">
-                +{profile.skills.length - 5} more
+                +{profile.skills.length - 9} more
               </Badge>
             )}
           </div>
@@ -151,9 +151,9 @@ export function ProfileCard({ profile, currentUserId }: ProfileCardProps) {
         )}
       </CardContent>
 
-      <CardFooter className="pt-2 border-t">
+      <CardFooter className="py-3 border-t">
         <div className="w-full flex items-center justify-between">
-          <div className="flex gap-2">
+          <div className="flex gap-3 items-center">
             {socialLinks.map((link, index) => {
               const Icon = link.icon;
               return (
@@ -164,7 +164,7 @@ export function ProfileCard({ profile, currentUserId }: ProfileCardProps) {
                   rel="noopener noreferrer"
                   className="text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  <Icon size={16} />
+                  <Icon size={18} />
                 </a>
               );
             })}
@@ -176,7 +176,7 @@ export function ProfileCard({ profile, currentUserId }: ProfileCardProps) {
                 ? '/profile/me'
                 : `/profile/${profile.discord_username}`
             }
-            className="text-xs text-blue-500 hover:underline"
+            className="text-xs bg-primary/10 text-primary hover:bg-primary/20 px-2.5 py-1 rounded-md transition-colors"
           >
             View Profile
           </Link>
