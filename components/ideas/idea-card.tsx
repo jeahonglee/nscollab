@@ -55,7 +55,7 @@ export function IdeaCard({ idea }: IdeaCardProps) {
         {idea.looking_for_tags && idea.looking_for_tags.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-3">
             {idea.looking_for_tags.map((tag) => (
-              <Badge key={tag} variant="secondary" className="text-xs">
+              <Badge key={tag} variant="outline" className="text-xs">
                 {tag}
               </Badge>
             ))}
