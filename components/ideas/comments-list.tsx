@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -37,44 +37,15 @@ export function CommentsList({
 }: CommentsListProps) {
   const router = useRouter();
   const [isAddingComment, setIsAddingComment] = useState(false);
-  const [isDeletingComment, setIsDeletingComment] = useState<string | null>(null);
-  
+  const [isDeletingComment, setIsDeletingComment] = useState<string | null>(
+    null
+  );
+
   // Sort comments by creation time (newest first)
   const sortedComments = [...comments].sort(
     (a, b) =>
       new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   );
-
-  // Client wrapper for add comment action
-  async function handleAddComment(formData: FormData) {
-    try {
-      setIsAddingComment(true);
-      await addComment(formData, ideaId, currentUserId);
-      // Clear the input field after successful submission
-      (document.querySelector('textarea[name="comment"]') as HTMLTextAreaElement).value = '';
-      router.refresh();
-    } catch (error) {
-      console.error('Error adding comment:', error);
-    } finally {
-      setIsAddingComment(false);
-    }
-  }
-
-  // Client wrapper for delete comment action
-  async function handleDeleteComment(formData: FormData) {
-    const commentId = formData.get('commentId') as string;
-    if (!commentId) return;
-    
-    try {
-      setIsDeletingComment(commentId);
-      await deleteComment(formData, ideaId, currentUserId);
-      router.refresh();
-    } catch (error) {
-      console.error('Error deleting comment:', error);
-    } finally {
-      setIsDeletingComment(null);
-    }
-  }
 
   // Get initials for avatar fallback
   const getInitials = (name: string | null | undefined) => {
@@ -90,7 +61,7 @@ export function CommentsList({
   return (
     <div className="space-y-6">
       {/* New Comment Form */}
-      <form 
+      <form
         onSubmit={async (e) => {
           e.preventDefault();
           const form = e.target as HTMLFormElement;
@@ -106,7 +77,7 @@ export function CommentsList({
           } finally {
             setIsAddingComment(false);
           }
-        }} 
+        }}
         className="flex flex-col gap-2"
       >
         <Textarea
@@ -119,7 +90,10 @@ export function CommentsList({
             {isAddingComment ? 'Adding...' : 'Add Comment'}
           </Button>
         </div>
-        <LoadingOverlay isLoading={isAddingComment} loadingText="Adding comment..." />
+        <LoadingOverlay
+          isLoading={isAddingComment}
+          loadingText="Adding comment..."
+        />
       </form>
 
       {/* Comments List */}
@@ -177,7 +151,7 @@ export function CommentsList({
                   </div>
 
                   {comment.user_id === currentUserId && (
-                    <form 
+                    <form
                       onSubmit={async (e) => {
                         e.preventDefault();
                         const form = e.target as HTMLFormElement;
@@ -207,7 +181,9 @@ export function CommentsList({
                         type="submit"
                         disabled={isDeletingComment === comment.id}
                       >
-                        {isDeletingComment === comment.id ? 'Deleting...' : 'Delete'}
+                        {isDeletingComment === comment.id
+                          ? 'Deleting...'
+                          : 'Delete'}
                       </Button>
                     </form>
                   )}

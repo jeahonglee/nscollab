@@ -2,22 +2,23 @@
 
 import { createClient } from '@/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
-import { redirect } from 'next/navigation';
 import { LOOKING_FOR_TAGS } from '@/lib/supabase/types';
 
 export async function submitIdea(formData: FormData, userId: string) {
   const supabase = await createClient();
-  
+
   // Get form data
   const title = formData.get('title') as string;
   const description = formData.get('description') as string;
   const status = formData.get('status') as string;
-  
+
   // Get looking_for tags
-  const lookingForTags = LOOKING_FOR_TAGS.filter(tag => 
-    formData.get(`looking-for-${tag.replace(/\s/g, '-').toLowerCase()}`) === 'on'
+  const lookingForTags = LOOKING_FOR_TAGS.filter(
+    (tag) =>
+      formData.get(`looking-for-${tag.replace(/\s/g, '-').toLowerCase()}`) ===
+      'on'
   );
-  
+
   // Create idea in database
   const { data: idea, error } = await supabase
     .from('ideas')
@@ -32,38 +33,34 @@ export async function submitIdea(formData: FormData, userId: string) {
     })
     .select()
     .single();
-  
+
   if (error) {
     console.error('Error submitting idea:', error);
     throw new Error('Failed to submit idea');
   }
-  
+
   // Add the creator as the first team member with "Owner" role
-  const { error: memberError } = await supabase
-    .from('idea_members')
-    .insert({
-      idea_id: idea.id,
-      user_id: userId,
-      role: 'Owner',
-    });
-  
+  const { error: memberError } = await supabase.from('idea_members').insert({
+    idea_id: idea.id,
+    user_id: userId,
+    role: 'Owner',
+  });
+
   if (memberError) {
     console.error('Error adding owner to idea:', memberError);
   }
-  
+
   // Add a welcome comment
-  const { error: commentError } = await supabase
-    .from('idea_comments')
-    .insert({
-      idea_id: idea.id,
-      user_id: userId,
-      comment_text: '🚀 Created this idea! Looking forward to making it happen.',
-    });
-  
+  const { error: commentError } = await supabase.from('idea_comments').insert({
+    idea_id: idea.id,
+    user_id: userId,
+    comment_text: '🚀 Created this idea! Looking forward to making it happen.',
+  });
+
   if (commentError) {
     console.error('Error adding welcome comment:', commentError);
   }
-  
+
   revalidatePath('/ideas');
   return idea.id;
 }
