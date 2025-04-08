@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatDistanceToNow, subWeeks, startOfWeek, format } from 'date-fns';
 import { MessageSquare, Lightbulb, Clock, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import FeedbackBoard from '@/components/FeedbackBoard';
 
 // Define types to match Supabase response format
 
@@ -32,6 +33,50 @@ export default async function DashboardPage({
   const today = new Date();
   const startDate = startOfWeek(subWeeks(today, weeksToLoad));
   const startDateString = startDate.toISOString();
+  
+  // Fetch feedbacks
+  const { data: rawFeedbacks, error: feedbacksError } = await supabase
+    .from('feedbacks')
+    .select(`
+      id,
+      message,
+      user_id,
+      created_at,
+      profile: profiles (id, full_name, avatar_url)
+    `)
+    .order('created_at', { ascending: false })
+    .limit(50);
+    
+  if (feedbacksError) {
+    console.error('Error fetching feedbacks:', feedbacksError);
+  }
+  
+  // Process the feedbacks to handle nested profile data correctly
+  const feedbacks = (rawFeedbacks || []).map(feedback => {
+    const rawFeedback = feedback as Record<string, unknown>;
+    
+    // Extract profile (might be an array or object)
+    let profile = null;
+    if (rawFeedback.profile) {
+      if (Array.isArray(rawFeedback.profile) && rawFeedback.profile.length > 0) {
+        profile = rawFeedback.profile[0];
+      } else {
+        profile = rawFeedback.profile;
+      }
+    }
+    
+    return {
+      id: rawFeedback.id as string,
+      message: rawFeedback.message as string,
+      user_id: rawFeedback.user_id as string,
+      created_at: rawFeedback.created_at as string,
+      profile: profile as {
+        id: string;
+        full_name: string | null;
+        avatar_url: string | null;
+      } | null
+    };
+  });
 
   // Fetch comments from the last X weeks with related data
   const { data: recentComments, error } = await supabase
@@ -409,7 +454,7 @@ export default async function DashboardPage({
           </Card>
         </div>
 
-        <div>
+        <div className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center text-base">
@@ -451,6 +496,12 @@ export default async function DashboardPage({
               </div>
             </CardContent>
           </Card>
+
+          {/* Feedback Memo Board */}
+          <FeedbackBoard 
+            feedbacks={feedbacks} 
+            currentUserId={user.id} 
+          />
         </div>
       </div>
     </div>
