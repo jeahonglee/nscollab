@@ -26,11 +26,11 @@ CREATE POLICY "Allow service role to manage whitelist" ON public.discord_whiteli
 CREATE INDEX idx_discord_whitelist_username ON public.discord_whitelist (username);
 
 -- Create function to check if a username is whitelisted
-CREATE OR REPLACE FUNCTION public.is_discord_username_whitelisted(username TEXT)
+CREATE OR REPLACE FUNCTION public.is_discord_username_whitelisted(input_username TEXT)
 RETURNS BOOLEAN AS $$
 BEGIN
   RETURN EXISTS (
-    SELECT 1 FROM public.discord_whitelist WHERE lower(discord_whitelist.username) = lower(username)
+    SELECT 1 FROM public.discord_whitelist WHERE lower(discord_whitelist.username) = lower(input_username)
   );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
