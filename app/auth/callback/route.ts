@@ -41,14 +41,30 @@ export async function GET(request: Request) {
 
       const avatarUrl = data.user.user_metadata?.avatar_url;
 
-      // console.log('Processed auth data:', {
-      //   userId,
-      //   rawDiscordUsername,
-      //   cleanedDiscordUsername: discordUsername,
-      //   globalName,
-      //   email,
-      //   avatarUrl,
-      // });
+      // Check if the Discord username is in the whitelist
+      if (discordUsername) {
+        const { data: whitelistData, error: whitelistError } = await supabase
+          .rpc('is_discord_username_whitelisted', { username: discordUsername });
+
+        if (whitelistError) {
+          console.error('Error checking whitelist:', whitelistError);
+          // If there's an error checking the whitelist, redirect to not-whitelisted page
+          const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || origin;
+          return NextResponse.redirect(`${siteUrl}/not-whitelisted`);
+        }
+
+        // If username is not in whitelist, redirect to not-whitelisted page
+        if (!whitelistData) {
+          console.log(`User ${discordUsername} not in whitelist, redirecting`);
+          const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || origin;
+          return NextResponse.redirect(`${siteUrl}/not-whitelisted`);
+        }
+      } else {
+        // If no username was extracted, redirect to not-whitelisted page
+        console.log('No Discord username found, redirecting');
+        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || origin;
+        return NextResponse.redirect(`${siteUrl}/not-whitelisted`);
+      }
 
       // Always try to create/update profile, even if username appears empty
       try {
@@ -69,12 +85,6 @@ export async function GET(request: Request) {
         // Update or create profile with Discord data
         if (existingProfile) {
           // Update existing profile
-          // console.log(
-          //   'Updating existing profile for user:',
-          //   userId,
-          //   'with username:',
-          //   discordUsername
-          // );
           dbResult = await supabase
             .from('profiles')
             .update({
@@ -87,12 +97,6 @@ export async function GET(request: Request) {
             .eq('id', userId);
         } else {
           // Create new profile
-          // console.log(
-          //   'Creating new profile for user:',
-          //   userId,
-          //   'with username:',
-          //   discordUsername
-          // );
           dbResult = await supabase.from('profiles').insert({
             id: userId,
             discord_username: discordUsername,
@@ -106,8 +110,6 @@ export async function GET(request: Request) {
 
         if (dbResult.error) {
           console.error('Error creating/updating profile:', dbResult.error);
-        } else {
-          // console.log('Profile successfully created/updated for user:', userId);
         }
       } catch (err) {
         console.error('Unexpected error in profile creation/update:', err);
