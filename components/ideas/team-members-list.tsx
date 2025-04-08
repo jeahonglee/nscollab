@@ -48,25 +48,27 @@ export function TeamMembersList({
 
     const supabase = await createClient();
 
-    // Check if there are existing members for this idea
-    const { data: existingMembers, error: countError } = await supabase
+    // Check if there are existing owners for this idea
+    const { data: existingOwners, error: ownerError } = await supabase
       .from('idea_members')
-      .select('id', { count: 'exact', head: true })
-      .eq('idea_id', ideaId);
+      .select('id')
+      .eq('idea_id', ideaId)
+      .eq('role', 'Owner');
 
-    if (countError) {
-      console.error('Error checking existing members:', countError);
+    if (ownerError) {
+      console.error('Error checking existing owners:', ownerError);
       return;
     }
 
-    const isFirstMember = (existingMembers?.length ?? 0) === 0;
-    const role = isFirstMember ? 'Owner' : 'Member';
+    // If there's an existing owner, new members should be 'Member'
+    // If no owners, this is the first/new owner
+    const role = existingOwners && existingOwners.length > 0 ? 'Member' : 'Owner';
 
     // Add user as a member with the determined role
     const { error } = await supabase.from('idea_members').insert({
       idea_id: ideaId,
       user_id: currentUserId,
-      role: role, // Use the determined role
+      role: role,
     });
 
     if (error) {
@@ -79,6 +81,44 @@ export function TeamMembersList({
       idea_id: ideaId,
       user_id: currentUserId,
       comment_text: '👋 I joined the team!',
+    });
+
+    // Update last activity timestamp
+    await supabase
+      .from('ideas')
+      .update({ last_activity_at: new Date().toISOString() })
+      .eq('id', ideaId);
+
+    revalidatePath(`/ideas/${ideaId}`);
+  }
+
+  // Server action to remove a team member
+  async function removeMember(formData: FormData) {
+    'use server';
+
+    const supabase = await createClient();
+
+    // Get data from form
+    const ideaId = formData.get('ideaId') as string;
+    const userIdToRemove = formData.get('userIdToRemove') as string;
+
+    // Remove the member
+    const { error } = await supabase
+      .from('idea_members')
+      .delete()
+      .eq('idea_id', ideaId)
+      .eq('user_id', userIdToRemove);
+
+    if (error) {
+      console.error('Error removing team member:', error);
+      return;
+    }
+
+    // Add a comment noting the removal
+    await supabase.from('idea_comments').insert({
+      idea_id: ideaId,
+      user_id: currentUserId,
+      comment_text: '🔄 A team member has been removed.',
     });
 
     // Update last activity timestamp
@@ -188,9 +228,13 @@ export function TeamMembersList({
           </div>
 
           {isOwner && member.user_id !== currentUserId && (
-            <Button variant="ghost" size="sm" className="h-7">
-              Remove
-            </Button>
+            <form action={removeMember}>
+              <input type="hidden" name="ideaId" value={ideaId} />
+              <input type="hidden" name="userIdToRemove" value={member.user_id} />
+              <Button type="submit" variant="ghost" size="sm" className="h-7">
+                Remove
+              </Button>
+            </form>
           )}
         </div>
       ))}

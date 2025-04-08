@@ -33,38 +33,43 @@ export default async function DashboardPage({
   const today = new Date();
   const startDate = startOfWeek(subWeeks(today, weeksToLoad));
   const startDateString = startDate.toISOString();
-  
+
   // Fetch feedbacks
   const { data: rawFeedbacks, error: feedbacksError } = await supabase
     .from('feedbacks')
-    .select(`
+    .select(
+      `
       id,
       message,
       user_id,
       created_at,
       profile: profiles (id, full_name, avatar_url)
-    `)
+    `
+    )
     .order('created_at', { ascending: false })
     .limit(50);
-    
+
   if (feedbacksError) {
     console.error('Error fetching feedbacks:', feedbacksError);
   }
-  
+
   // Process the feedbacks to handle nested profile data correctly
-  const feedbacks = (rawFeedbacks || []).map(feedback => {
+  const feedbacks = (rawFeedbacks || []).map((feedback) => {
     const rawFeedback = feedback as Record<string, unknown>;
-    
+
     // Extract profile (might be an array or object)
     let profile = null;
     if (rawFeedback.profile) {
-      if (Array.isArray(rawFeedback.profile) && rawFeedback.profile.length > 0) {
+      if (
+        Array.isArray(rawFeedback.profile) &&
+        rawFeedback.profile.length > 0
+      ) {
         profile = rawFeedback.profile[0];
       } else {
         profile = rawFeedback.profile;
       }
     }
-    
+
     return {
       id: rawFeedback.id as string,
       message: rawFeedback.message as string,
@@ -74,7 +79,7 @@ export default async function DashboardPage({
         id: string;
         full_name: string | null;
         avatar_url: string | null;
-      } | null
+      } | null,
     };
   });
 
@@ -260,7 +265,7 @@ export default async function DashboardPage({
       <div>
         <h1 className="text-3xl font-bold">Dashboard</h1>
         <p className="text-muted-foreground">
-          Recent activity from the NS Collab community
+          Recent activity from the NS Collab
         </p>
       </div>
 
@@ -498,10 +503,7 @@ export default async function DashboardPage({
           </Card>
 
           {/* Feedback Memo Board */}
-          <FeedbackBoard 
-            feedbacks={feedbacks} 
-            currentUserId={user.id} 
-          />
+          <FeedbackBoard feedbacks={feedbacks} currentUserId={user.id} />
         </div>
       </div>
     </div>
