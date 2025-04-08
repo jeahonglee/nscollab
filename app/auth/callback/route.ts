@@ -48,20 +48,23 @@ export async function GET(request: Request) {
 
         if (whitelistError) {
           console.error('Error checking whitelist:', whitelistError);
-          // If there's an error checking the whitelist, redirect to not-whitelisted page
+          // If there's an error checking the whitelist, sign out the user and redirect
+          await supabase.auth.signOut();
           const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || origin;
           return NextResponse.redirect(`${siteUrl}/not-whitelisted`);
         }
 
-        // If username is not in whitelist, redirect to not-whitelisted page
+        // If username is not in whitelist, sign out and redirect to not-whitelisted page
         if (!whitelistData) {
-          console.log(`User ${discordUsername} not in whitelist, redirecting`);
+          console.log(`User ${discordUsername} not in whitelist, signing out and redirecting`);
+          await supabase.auth.signOut();
           const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || origin;
           return NextResponse.redirect(`${siteUrl}/not-whitelisted`);
         }
       } else {
-        // If no username was extracted, redirect to not-whitelisted page
-        console.log('No Discord username found, redirecting');
+        // If no username was extracted, sign out and redirect to not-whitelisted page
+        console.log('No Discord username found, signing out and redirecting');
+        await supabase.auth.signOut();
         const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || origin;
         return NextResponse.redirect(`${siteUrl}/not-whitelisted`);
       }
