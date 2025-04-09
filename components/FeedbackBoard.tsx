@@ -74,15 +74,25 @@ export default function FeedbackBoard({
     }
   };
 
-  // Helper function for avatar fallback
+  // Helper function for avatar fallback - fixed for consistent server/client rendering
   const getInitials = (name: string | null | undefined) => {
-    if (!name) return '?';
-    return name
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
-      .substring(0, 2);
+    if (!name || typeof name !== 'string') return '?';
+    
+    try {
+      // Use a deterministic approach for consistent rendering
+      const parts = name.trim().split(/\s+/);
+      const initials = parts
+        .filter(part => part.length > 0)
+        .map(part => part.charAt(0))
+        .join('')
+        .toUpperCase()
+        .substring(0, 2);
+        
+      return initials || '?';
+    } catch {
+      // Failsafe
+      return '?';
+    }
   };
 
   return (
@@ -96,7 +106,7 @@ export default function FeedbackBoard({
       <CardContent>
         {/* Form to submit new feedback */}
         <form onSubmit={handleSubmit} className="relative pb-4">
-          {isSubmitting && <LoadingOverlay />}
+          <LoadingOverlay isLoading={isSubmitting} loadingText="Submitting feedback..." />
           <Textarea
             placeholder="Leave your feedback or message here..."
             value={message}
@@ -134,7 +144,7 @@ export default function FeedbackBoard({
                 key={feedback.id}
                 className="relative p-2 group hover:bg-accent/30 rounded-md transition-colors"
               >
-                {isDeleting === feedback.id && <LoadingOverlay />}
+                <LoadingOverlay isLoading={isDeleting === feedback.id} loadingText="Deleting feedback..." />
                 <div className="flex items-start gap-2">
                   <Avatar className="h-6 w-6">
                     <AvatarImage

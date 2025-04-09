@@ -22,15 +22,25 @@ interface ProfileCardProps {
 }
 
 export function ProfileCard({ profile, currentUserId }: ProfileCardProps) {
-  // Get initials for avatar fallback
+  // Get initials for avatar fallback - fixed for consistent server/client rendering
   const getInitials = (name: string | null) => {
-    if (!name) return 'NS';
-    return name
-      .split(' ')
-      .map((part) => part[0])
-      .join('')
-      .toUpperCase()
-      .substring(0, 2);
+    if (!name || typeof name !== 'string') return 'NS';
+    
+    try {
+      // Use a deterministic approach that will render the same on server and client
+      const parts = name.trim().split(/\s+/);
+      const initials = parts
+        .filter(part => part.length > 0)
+        .map(part => part.charAt(0))
+        .join('')
+        .toUpperCase()
+        .substring(0, 2);
+        
+      return initials || 'NS';
+    } catch {
+      // Failsafe return value
+      return 'NS';
+    }
   };
 
   // Extract Discord ID from avatar URL

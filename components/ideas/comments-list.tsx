@@ -47,15 +47,25 @@ export function CommentsList({
       new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   );
 
-  // Get initials for avatar fallback
+  // Get initials for avatar fallback - fixed for consistent server/client rendering
   const getInitials = (name: string | null | undefined) => {
-    if (!name) return 'NS';
-    return name
-      .split(' ')
-      .map((part) => part[0])
-      .join('')
-      .toUpperCase()
-      .substring(0, 2);
+    if (!name || typeof name !== 'string') return 'NS';
+    
+    try {
+      // Use a deterministic approach for consistent rendering
+      const parts = name.trim().split(/\s+/);
+      const initials = parts
+        .filter(part => part.length > 0)
+        .map(part => part.charAt(0))
+        .join('')
+        .toUpperCase()
+        .substring(0, 2);
+        
+      return initials || 'NS';
+    } catch {
+      // Failsafe
+      return 'NS';
+    }
   };
 
   return (

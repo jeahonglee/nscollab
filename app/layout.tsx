@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { ThemeProvider } from 'next-themes';
 import { Geist } from 'next/font/google';
 import { hasEnvVars } from '@/utils/supabase/check-env-vars';
@@ -5,6 +6,7 @@ import { EnvVarWarning } from '@/components/env-var-warning';
 import NavBar from '@/components/layout/nav-bar';
 import './globals.css';
 import ThemeSwitcherWrapper from '@/components/layout/theme-switcher-wrapper';
+import RouteCacheProvider from '@/components/layout/route-cache-provider';
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
@@ -36,13 +38,21 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          {/* Route Cache Provider for faster navigation */}
+          <RouteCacheProvider />
           {!hasEnvVars && <EnvVarWarning />}
           <main className="min-h-screen flex flex-col">
-            {/* Server-side rendered navigation bar with authentication */}
-            <NavBar />
+            {/* Navigation with authentication */}
+            <Suspense fallback={<div className="h-14 border-b border-border"></div>}>
+              <NavBar />
+            </Suspense>
 
             <div className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-              <div className="flex flex-col gap-8 w-full">{children}</div>
+              <div className="flex flex-col gap-8 w-full">
+                <Suspense fallback={<div className="animate-pulse h-96 bg-muted rounded-lg"></div>}>
+                  {children}
+                </Suspense>
+              </div>
             </div>
 
             <footer className="border-t border-border py-6 md:py-0">
