@@ -1,9 +1,12 @@
-import { createClient } from '@/utils/supabase/server';
-import { revalidatePath } from 'next/cache';
+"use client";
+
+import { useState } from 'react';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { UserPlus, UserMinus } from 'lucide-react';
+import { LoadingOverlay } from '@/components/ui/loading-overlay';
+import { joinTeam, removeMember, leaveTeam } from '@/lib/actions/team-member-actions';
 
 interface Member {
   id: string;
@@ -32,6 +35,11 @@ export function TeamMembersList({
   isOwner,
   currentUserId,
 }: TeamMembersListProps) {
+  // Loading states
+  const [isJoining, setIsJoining] = useState(false);
+  const [isLeaving, setIsLeaving] = useState(false);
+  const [isRemoving, setIsRemoving] = useState(false);
+
   // Sort members by role (owners first) and join date
   const sortedMembers = [...members].sort((a, b) => {
     if (a.role === 'Owner' && b.role !== 'Owner') return -1;
@@ -42,144 +50,51 @@ export function TeamMembersList({
   // Check if current user is already a member
   const isMember = members.some((member) => member.user_id === currentUserId);
 
-  // Server action to join a team
-  async function joinTeam() {
-    'use server';
-
-    const supabase = await createClient();
-
-    // Check if there are existing owners for this idea
-    const { data: existingOwners, error: ownerError } = await supabase
-      .from('idea_members')
-      .select('id')
-      .eq('idea_id', ideaId)
-      .eq('role', 'Owner');
-
-    if (ownerError) {
-      console.error('Error checking existing owners:', ownerError);
-      return;
-    }
-
-    // If there's an existing owner, new members should be 'Member'
-    // If no owners, this is the first/new owner
-    const role = existingOwners && existingOwners.length > 0 ? 'Member' : 'Owner';
-
-    // Add user as a member with the determined role
-    const { error } = await supabase.from('idea_members').insert({
-      idea_id: ideaId,
-      user_id: currentUserId,
-      role: role,
-    });
-
-    if (error) {
+  // Handle joining team
+  const handleJoinTeam = async () => {
+    setIsJoining(true);
+    try {
+      await joinTeam(ideaId, currentUserId);
+    } catch (error) {
       console.error('Error joining team:', error);
-      return;
+    } finally {
+      setIsJoining(false);
     }
+  };
 
-    // Add a comment announcing they joined
-    await supabase.from('idea_comments').insert({
-      idea_id: ideaId,
-      user_id: currentUserId,
-      comment_text: '👋 I joined the team!',
-    });
-
-    // Update last activity timestamp
-    await supabase
-      .from('ideas')
-      .update({ last_activity_at: new Date().toISOString() })
-      .eq('id', ideaId);
-
-    revalidatePath(`/ideas/${ideaId}`);
-  }
-
-  // Server action to remove a team member
-  async function removeMember(formData: FormData) {
-    'use server';
-
-    const supabase = await createClient();
-
-    // Get data from form
-    const ideaId = formData.get('ideaId') as string;
-    const userIdToRemove = formData.get('userIdToRemove') as string;
-
-    // Remove the member
-    const { error } = await supabase
-      .from('idea_members')
-      .delete()
-      .eq('idea_id', ideaId)
-      .eq('user_id', userIdToRemove);
-
-    if (error) {
+  // Handle removing a team member
+  const handleRemoveMember = async (userIdToRemove: string) => {
+    setIsRemoving(true);
+    try {
+      const formData = new FormData();
+      formData.append('ideaId', ideaId);
+      formData.append('userIdToRemove', userIdToRemove);
+      formData.append('currentUserId', currentUserId);
+      
+      await removeMember(formData);
+    } catch (error) {
       console.error('Error removing team member:', error);
-      return;
+    } finally {
+      setIsRemoving(false);
     }
+  };
 
-    // Add a comment noting the removal
-    await supabase.from('idea_comments').insert({
-      idea_id: ideaId,
-      user_id: currentUserId,
-      comment_text: '🔄 A team member has been removed.',
-    });
-
-    // Update last activity timestamp
-    await supabase
-      .from('ideas')
-      .update({ last_activity_at: new Date().toISOString() })
-      .eq('id', ideaId);
-
-    revalidatePath(`/ideas/${ideaId}`);
-  }
-
-  // Server action to leave a team
-  async function leaveTeam(formData: FormData) {
-    'use server';
-
-    const supabase = await createClient();
-
-    // Get data from form
-    const ideaId = formData.get('ideaId') as string;
-    const currentUserId = formData.get('currentUserId') as string;
-    const membersJson = formData.get('members') as string;
-    const members = JSON.parse(membersJson);
-
-    // Check if user is the owner and if there are other members
-    const isUserOwner = members.some(
-      (member: Member) =>
-        member.user_id === currentUserId && member.role === 'Owner'
-    );
-
-    if (isUserOwner && members.length > 1) {
-      // Cannot leave if you're the owner and there are other members
-      return;
-    }
-
-    // Remove user from members
-    const { error } = await supabase
-      .from('idea_members')
-      .delete()
-      .eq('idea_id', ideaId)
-      .eq('user_id', currentUserId);
-
-    if (error) {
+  // Handle leaving team
+  const handleLeaveTeam = async () => {
+    setIsLeaving(true);
+    try {
+      const formData = new FormData();
+      formData.append('ideaId', ideaId);
+      formData.append('currentUserId', currentUserId);
+      formData.append('members', JSON.stringify(members));
+      
+      await leaveTeam(formData);
+    } catch (error) {
       console.error('Error leaving team:', error);
-      return;
+    } finally {
+      setIsLeaving(false);
     }
-
-    // Add a comment announcing they left
-    await supabase.from('idea_comments').insert({
-      idea_id: ideaId,
-      user_id: currentUserId,
-      comment_text: '👋 I left the team.',
-    });
-
-    // Update last activity timestamp
-    await supabase
-      .from('ideas')
-      .update({ last_activity_at: new Date().toISOString() })
-      .eq('id', ideaId);
-
-    revalidatePath(`/ideas/${ideaId}`);
-  }
+  };
 
   // Get initials for avatar fallback
   const getInitials = (name: string | null | undefined) => {
@@ -193,7 +108,10 @@ export function TeamMembersList({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 relative">
+      <LoadingOverlay isLoading={isJoining} loadingText="Joining team..." />
+      <LoadingOverlay isLoading={isLeaving} loadingText="Leaving team..." />
+      <LoadingOverlay isLoading={isRemoving} loadingText="Removing member..." />
       {sortedMembers.map((member) => (
         <div key={member.id} className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -228,13 +146,15 @@ export function TeamMembersList({
           </div>
 
           {isOwner && member.user_id !== currentUserId && (
-            <form action={removeMember}>
-              <input type="hidden" name="ideaId" value={ideaId} />
-              <input type="hidden" name="userIdToRemove" value={member.user_id} />
-              <Button type="submit" variant="ghost" size="sm" className="h-7">
-                Remove
-              </Button>
-            </form>
+            <Button 
+              onClick={() => handleRemoveMember(member.user_id)} 
+              variant="ghost" 
+              size="sm" 
+              className="h-7"
+              disabled={isRemoving}
+            >
+              Remove
+            </Button>
           )}
         </div>
       ))}
@@ -242,26 +162,26 @@ export function TeamMembersList({
       {/* Actions */}
       <div className="pt-4 mt-4 border-t">
         {!isMember ? (
-          <form action={joinTeam}>
-            <Button className="w-full" size="sm">
-              <UserPlus className="h-4 w-4 mr-2" />
-              Join Team
-            </Button>
-          </form>
+          <Button 
+            onClick={handleJoinTeam} 
+            className="w-full" 
+            size="sm"
+            disabled={isJoining}
+          >
+            <UserPlus className="h-4 w-4 mr-2" />
+            Join Team
+          </Button>
         ) : (
-          <form action={leaveTeam}>
-            <input type="hidden" name="ideaId" value={ideaId} />
-            <input type="hidden" name="currentUserId" value={currentUserId} />
-            <input
-              type="hidden"
-              name="members"
-              value={JSON.stringify(members)}
-            />
-            <Button variant="outline" className="w-full" size="sm">
-              <UserMinus className="h-4 w-4 mr-2" />
-              Leave Team
-            </Button>
-          </form>
+          <Button 
+            onClick={handleLeaveTeam} 
+            variant="outline" 
+            className="w-full" 
+            size="sm"
+            disabled={isLeaving}
+          >
+            <UserMinus className="h-4 w-4 mr-2" />
+            Leave Team
+          </Button>
         )}
       </div>
     </div>
