@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { formatDistanceToNow } from 'date-fns';
 import Link from 'next/link';
 import { LoadingOverlay } from '@/components/ui/loading-overlay';
+import { getInitials } from '@/lib/utils/string-utils';
 // Import server actions from comment-actions.ts
 import { addComment, deleteComment } from '@/lib/comment-actions';
 
@@ -47,26 +48,7 @@ export function CommentsList({
       new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   );
 
-  // Get initials for avatar fallback - fixed for consistent server/client rendering
-  const getInitials = (name: string | null | undefined) => {
-    if (!name || typeof name !== 'string') return 'NS';
-    
-    try {
-      // Use a deterministic approach for consistent rendering
-      const parts = name.trim().split(/\s+/);
-      const initials = parts
-        .filter(part => part.length > 0)
-        .map(part => part.charAt(0))
-        .join('')
-        .toUpperCase()
-        .substring(0, 2);
-        
-      return initials || 'NS';
-    } catch {
-      // Failsafe
-      return 'NS';
-    }
-  };
+
 
   return (
     <div className="space-y-6">
@@ -122,7 +104,7 @@ export function CommentsList({
                       alt={comment.profile?.full_name || ''}
                     />
                     <AvatarFallback>
-                      {getInitials(comment.profile?.full_name)}
+                      {getInitials(comment.profile?.full_name, 'NS')}
                     </AvatarFallback>
                   </Avatar>
                 </Link>
@@ -133,7 +115,7 @@ export function CommentsList({
                     alt={comment.profile?.full_name || ''}
                   />
                   <AvatarFallback>
-                    {getInitials(comment.profile?.full_name)}
+                    {getInitials(comment.profile?.full_name, 'NS')}
                   </AvatarFallback>
                 </Avatar>
               )}

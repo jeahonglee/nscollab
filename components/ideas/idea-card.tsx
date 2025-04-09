@@ -9,6 +9,7 @@ import {
   CardHeader,
 } from '@/components/ui/card';
 import { formatDistanceToNow } from 'date-fns';
+import { getInitials } from '@/lib/utils/string-utils';
 
 interface IdeaCardProps {
   idea: IdeaWithRelations;
@@ -20,26 +21,7 @@ export function IdeaCard({ idea }: IdeaCardProps) {
     addSuffix: true,
   });
 
-  // Get initials for avatar fallback - fixed for consistent server/client rendering
-  const getInitials = (name: string | null | undefined) => {
-    if (!name || typeof name !== 'string') return 'NS';
-    
-    try {
-      // Use a deterministic approach for consistent rendering
-      const parts = name.trim().split(/\s+/);
-      const initials = parts
-        .filter(part => part.length > 0)
-        .map(part => part.charAt(0))
-        .join('')
-        .toUpperCase()
-        .substring(0, 2);
-        
-      return initials || 'NS';
-    } catch {
-      // Failsafe
-      return 'NS';
-    }
-  };
+
 
   return (
     <Card className="h-full flex flex-col">
@@ -82,7 +64,7 @@ export function IdeaCard({ idea }: IdeaCardProps) {
               />
               <AvatarFallback className="text-xs">
                 {idea.submitter_user_id
-                  ? getInitials(idea.profile?.full_name)
+                  ? getInitials(idea.profile?.full_name, 'NS')
                   : 'NS'}
               </AvatarFallback>
             </Avatar>
@@ -105,7 +87,7 @@ export function IdeaCard({ idea }: IdeaCardProps) {
                     alt={member.profile?.full_name || ''}
                   />
                   <AvatarFallback className="text-xs">
-                    {getInitials(member.profile?.full_name)}
+                    {getInitials(member.profile?.full_name, 'NS')}
                   </AvatarFallback>
                 </Avatar>
               ))}

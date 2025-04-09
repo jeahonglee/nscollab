@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Trash2, MessageSquareText } from 'lucide-react';
 import { LoadingOverlay } from '@/components/ui/loading-overlay';
 import { Separator } from '@/components/ui/separator';
+import { getInitials } from '@/lib/utils/string-utils';
 
 type FeedbackProps = {
   feedbacks: {
@@ -74,26 +75,7 @@ export default function FeedbackBoard({
     }
   };
 
-  // Helper function for avatar fallback - fixed for consistent server/client rendering
-  const getInitials = (name: string | null | undefined) => {
-    if (!name || typeof name !== 'string') return '?';
-    
-    try {
-      // Use a deterministic approach for consistent rendering
-      const parts = name.trim().split(/\s+/);
-      const initials = parts
-        .filter(part => part.length > 0)
-        .map(part => part.charAt(0))
-        .join('')
-        .toUpperCase()
-        .substring(0, 2);
-        
-      return initials || '?';
-    } catch {
-      // Failsafe
-      return '?';
-    }
-  };
+
 
   return (
     <Card>
@@ -152,7 +134,7 @@ export default function FeedbackBoard({
                       alt="Profile"
                     />
                     <AvatarFallback className="text-[10px]">
-                      {getInitials(feedback.profile?.full_name)}
+                      {getInitials(feedback.profile?.full_name, '?')}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1">

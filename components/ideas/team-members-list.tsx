@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { UserPlus, UserMinus } from 'lucide-react';
 import { LoadingOverlay } from '@/components/ui/loading-overlay';
 import { joinTeam, removeMember, leaveTeam } from '@/lib/actions/team-member-actions';
+import { getInitials } from '@/lib/utils/string-utils';
 
 interface Member {
   id: string;
@@ -96,26 +97,7 @@ export function TeamMembersList({
     }
   };
 
-  // Get initials for avatar fallback - fixed for consistent server/client rendering
-  const getInitials = (name: string | null | undefined) => {
-    if (!name || typeof name !== 'string') return 'NS';
-    
-    try {
-      // Use a deterministic approach for consistent rendering
-      const parts = name.trim().split(/\s+/);
-      const initials = parts
-        .filter(part => part.length > 0)
-        .map(part => part.charAt(0))
-        .join('')
-        .toUpperCase()
-        .substring(0, 2);
-        
-      return initials || 'NS';
-    } catch {
-      // Failsafe
-      return 'NS';
-    }
-  };
+
 
   return (
     <div className="space-y-4 relative">
@@ -132,7 +114,7 @@ export function TeamMembersList({
                   alt={member.profile?.full_name || ''}
                 />
                 <AvatarFallback>
-                  {getInitials(member.profile?.full_name)}
+                  {getInitials(member.profile?.full_name, 'NS')}
                 </AvatarFallback>
               </Avatar>
             </Link>
