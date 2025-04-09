@@ -1,6 +1,6 @@
 'use client';
 
-import { usePathname, useSearchParams } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useEffect, useRef } from 'react';
 
 type RouteCache = {
@@ -39,13 +39,12 @@ function cleanupCache() {
 // Hook to automatically prefetch likely navigation paths
 export function useRoutePrefetch() {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
+  // Don't use searchParams directly, handle in a safer way
+  // to avoid build issues with Suspense boundaries
   const lastPathRef = useRef<string | null>(null);
   
-  // Generate the full path including search params
-  const fullPath = searchParams?.size 
-    ? `${pathname}?${searchParams.toString()}`
-    : pathname;
+  // Generate the full path without search params to avoid build issues
+  const fullPath = pathname;
 
   useEffect(() => {
     // Don't prefetch during the initial render
