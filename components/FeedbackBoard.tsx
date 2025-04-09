@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatDistanceToNow } from 'date-fns';
 import { Textarea } from '@/components/ui/textarea';
 import { Trash2, MessageSquareText } from 'lucide-react';
-import LoadingOverlay from '@/components/LoadingOverlay';
+import { LoadingOverlay } from '@/components/ui/loading-overlay';
 import { Separator } from '@/components/ui/separator';
 
 type FeedbackProps = {
