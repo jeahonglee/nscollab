@@ -30,7 +30,9 @@ export default async function Login(props: { searchParams: Promise<Message> }) {
           <br />
           Please use the same account you use for NS Discord.
           <br />
-          If you are not whitelisted, please dm @jeahonglee in Discord
+          <span className="text-white">
+            If you are not whitelisted, please dm @jeahonglee in Discord
+          </span>
         </div>
       </div>
     </div>
