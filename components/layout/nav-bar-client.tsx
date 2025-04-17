@@ -79,7 +79,7 @@ function InlineUserMenu({ user }: { user: User }) {
   return (
     <DropdownMenu onOpenChange={handleMenuOpen}>
       <DropdownMenuTrigger asChild>
-        <button className="flex items-center gap-2 rounded-full focus:outline-none focus:ring-2 focus:ring-ring">
+        <button className="avatar-button rounded-full focus:outline-none focus:ring-2 focus:ring-ring">
           <Avatar className="h-8 w-8">
             <AvatarImage src={profile?.avatar_url || ''} alt={profile?.full_name || user.email || ''} />
             <AvatarFallback>{getInitials()}</AvatarFallback>
@@ -139,7 +139,7 @@ export default function NavBarClient({ initialUser }: { initialUser: User | null
         <div className="mr-4 flex">
           <Link href="/" className="flex items-center space-x-3">
             <NSLogo width={18} height={20} />
-            <span className="font-bold text-lg">NS Collab</span>
+            <span className="font-bold text-lg ns-collab-logo-text">NS Collab</span>
           </Link>
         </div>
         <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">

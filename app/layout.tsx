@@ -43,23 +43,28 @@ export default function RootLayout({
           {!hasEnvVars && <EnvVarWarning />}
           <main className="min-h-screen flex flex-col">
             {/* Navigation with authentication */}
-            <Suspense fallback={<div className="h-14 border-b border-border"></div>}>
+            <Suspense
+              fallback={<div className="h-14 border-b border-border"></div>}
+            >
               <NavBar />
             </Suspense>
 
             <div className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
               <div className="flex flex-col gap-8 w-full">
-                <Suspense fallback={<div className="animate-pulse h-96 bg-muted rounded-lg"></div>}>
+                <Suspense
+                  fallback={
+                    <div className="animate-pulse h-96 bg-muted rounded-lg"></div>
+                  }
+                >
                   {children}
                 </Suspense>
               </div>
             </div>
 
             <footer className="border-t border-border py-6 md:py-0">
-              <div className="container flex flex-col items-center justify-center gap-4 md:h-16 md:flex-row">
+              <div className="container flex items-center justify-between gap-4 md:h-16 md:flex-row">
                 <p className="text-center text-sm leading-loose text-muted-foreground md:text-left">
-                  &copy; {new Date().getFullYear()} Network School. All rights
-                  reserved.
+                  &copy; {new Date().getFullYear()} NS Collab
                 </p>
                 <ThemeSwitcherWrapper />
               </div>

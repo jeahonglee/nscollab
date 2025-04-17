@@ -30,7 +30,7 @@ export function IdeaCard({ idea }: IdeaCardProps) {
           <Badge variant="outline" className="mb-2">
             {idea.status}
           </Badge>
-          <span className="text-xs text-muted-foreground">{lastActivity}</span>
+          <span className="text-xs text-muted-foreground ns-collab-comments">{lastActivity}</span>
         </div>
         <Link
           href={`/ideas/${idea.id}`}

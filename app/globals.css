@@ -2,6 +2,41 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Responsive fixes for NS Collab logo, comments, and avatar */
+.ns-collab-logo-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.ns-collab-comments {
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+@media (max-width: 500px) {
+  .ns-collab-logo-text {
+    font-size: 1rem !important;
+    letter-spacing: 0.01em;
+    padding-right: 0.25rem;
+  }
+  .ns-collab-comments {
+    font-size: 0.92rem;
+  }
+}
+
+.avatar-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: none;
+  border: none;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;

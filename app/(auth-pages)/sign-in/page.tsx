@@ -28,7 +28,9 @@ export default async function Login(props: { searchParams: Promise<Message> }) {
         <div className="text-xs text-center text-muted-foreground mt-4">
           This platform is for Network School members only.
           <br />
-          Please use the same account you use for NS.
+          Please use the same account you use for NS Discord.
+          <br />
+          If you are not whitelisted, please dm @jeahonglee in Discord
         </div>
       </div>
     </div>
