@@ -263,8 +263,8 @@ export default async function DashboardPage({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Dashboard</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-3xl md:text-4xl font-bold">Dashboard</h1>
+        <p className="text-base md:text-lg text-muted-foreground">
           Recent activity from the NS Collab
         </p>
       </div>
@@ -274,17 +274,17 @@ export default async function DashboardPage({
           <Card>
             <CardHeader className="pb-3">
               <div className="flex justify-between items-center">
-                <CardTitle className="flex items-center text-lg">
+                <CardTitle className="flex items-center text-xl md:text-2xl">
                   <MessageSquare className="h-5 w-5 mr-2" />
                   Recent Discussions
                 </CardTitle>
-                <div className="text-sm text-muted-foreground flex items-center">
+                <div className="text-sm md:text-base text-muted-foreground flex items-center">
                   <Clock className="h-4 w-4 mr-1" />
                   Showing {weeksToLoad} week{weeksToLoad !== 1 ? 's' : ''} of
                   comments
                 </div>
               </div>
-              <div className="text-xs text-muted-foreground mt-1">
+              <div className="text-xs md:text-sm text-muted-foreground mt-1">
                 {format(startDate, 'MMM d, yyyy')} —{' '}
                 {format(new Date(), 'MMM d, yyyy')}
               </div>
@@ -300,7 +300,7 @@ export default async function DashboardPage({
                 {ideasWithComments.map((ideaGroup) => (
                   <div
                     key={ideaGroup.idea?.id}
-                    className="border border-muted rounded-md p-4 mb-4"
+                    className="border border-muted rounded-md p-4 md:p-6 mb-4"
                   >
                     {/* Idea header with link and creator info */}
                     {ideaGroup.idea && (
@@ -316,7 +316,7 @@ export default async function DashboardPage({
                                 {ideaGroup.idea.title}
                               </span>
                             </Link>
-                            <span className="text-xs px-1.5 py-0.5 bg-muted rounded-full">
+                            <span className="text-xs md:text-sm px-1.5 py-0.5 bg-muted rounded-full">
                               {ideaGroup.idea.status}
                             </span>
                           </div>
@@ -332,19 +332,19 @@ export default async function DashboardPage({
                         <div className="mt-2 space-y-1.5">
                           {/* Idea creator */}
                           {ideaGroup.idea.profile && (
-                            <div className="text-xs flex items-center gap-1.5 text-muted-foreground">
+                            <div className="text-xs md:text-sm flex items-center gap-1.5 text-muted-foreground">
                               <span>By</span>
                               <Link
                                 href={`/profile/${ideaGroup.idea.profile.discord_username || ideaGroup.idea.profile.id}`}
                                 className="font-medium hover:underline inline-flex items-center gap-1"
                               >
-                                <Avatar className="h-3 w-3">
+                                <Avatar className="h-4 w-4 md:h-5 md:w-5">
                                   <AvatarImage
                                     src={
                                       ideaGroup.idea.profile.avatar_url || ''
                                     }
                                   />
-                                  <AvatarFallback className="text-[6px]">
+                                  <AvatarFallback className="text-[8px] md:text-[10px]">
                                     {getInitials(
                                       ideaGroup.idea.profile.full_name
                                     )}
@@ -358,7 +358,7 @@ export default async function DashboardPage({
                           {/* Truncated description - only if there are more than 2 comments */}
                           {ideaGroup.idea.description &&
                             ideaGroup.comments.length > 2 && (
-                              <div className="text-xs text-muted-foreground line-clamp-1">
+                              <div className="text-xs md:text-sm text-muted-foreground line-clamp-1">
                                 {ideaGroup.idea.description.substring(0, 120)}
                                 {ideaGroup.idea.description.length > 120
                                   ? '...'
@@ -370,7 +370,7 @@ export default async function DashboardPage({
                     )}
 
                     {/* Comment list for this idea */}
-                    <div className="space-y-3 pl-3 border-l border-muted">
+                    <div className="space-y-3 pl-3 md:pl-5 border-l border-muted">
                       {(ideaGroup.comments.length <= 5
                         ? ideaGroup.comments
                         : ideaGroup.comments.slice(0, 5)
@@ -383,20 +383,20 @@ export default async function DashboardPage({
                                 href={`/profile/${comment.profile.discord_username || comment.profile.id}`}
                                 className="shrink-0"
                               >
-                                <Avatar className="h-6 w-6 mt-0.5">
+                                <Avatar className="h-7 w-7 md:h-8 md:w-8 mt-0.5">
                                   <AvatarImage
                                     src={comment.profile.avatar_url || ''}
                                     alt={comment.profile.full_name || ''}
                                   />
-                                  <AvatarFallback className="text-[10px]">
+                                  <AvatarFallback className="text-[11px] md:text-[13px]">
                                     {getInitials(comment.profile.full_name)}
                                   </AvatarFallback>
                                 </Avatar>
                               </Link>
                             )}
 
-                            <div className="flex-1">
-                              <div className="flex flex-wrap items-center gap-x-1.5 text-xs">
+                            <div className="flex-1 text-xs md:text-sm">
+                              <div className="flex flex-wrap items-center gap-x-1.5 text-xs md:text-sm">
                                 {/* Commenter name with link */}
                                 {comment.profile && (
                                   <Link
@@ -415,7 +415,7 @@ export default async function DashboardPage({
                               </div>
 
                               {/* Comment content */}
-                              <div className="mt-0.5 text-xs p-2 bg-muted/30 rounded whitespace-pre-line">
+                              <div className="mt-0.5 text-xs md:text-sm p-2 bg-muted/30 rounded whitespace-pre-line">
                                 {comment.comment_text}
                               </div>
                             </div>
@@ -429,7 +429,7 @@ export default async function DashboardPage({
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="w-full text-xs mt-2"
+                            className="w-full text-xs md:text-sm mt-2"
                           >
                             <ChevronDown className="h-3 w-3 mr-1" />
                             {ideaGroup.comments.length - 5} more comment
@@ -448,7 +448,7 @@ export default async function DashboardPage({
                   <Button
                     variant="outline"
                     size="sm"
-                    className="w-full text-xs"
+                    className="w-full text-xs md:text-sm"
                   >
                     <ChevronDown className="h-3 w-3 mr-1" />
                     Load comments from previous week
@@ -462,7 +462,7 @@ export default async function DashboardPage({
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center text-base">
+              <CardTitle className="flex items-center text-lg md:text-xl">
                 <Lightbulb className="h-5 w-5 mr-2" />
                 Quick Links
               </CardTitle>
@@ -473,7 +473,7 @@ export default async function DashboardPage({
                   href="/ideas"
                   className="block p-3 border rounded-md hover:bg-accent transition-colors"
                 >
-                  <div className="font-medium">Idea Hub</div>
+                  <div className="font-medium text-base md:text-lg">Idea Hub</div>
                   <div className="text-sm text-muted-foreground">
                     Browse project ideas or share your own
                   </div>
@@ -483,7 +483,7 @@ export default async function DashboardPage({
                   href="/people"
                   className="block p-3 border rounded-md hover:bg-accent transition-colors"
                 >
-                  <div className="font-medium">People Directory</div>
+                  <div className="font-medium text-base md:text-lg">People Directory</div>
                   <div className="text-sm text-muted-foreground">
                     Find NS members to collaborate with
                   </div>
@@ -493,7 +493,7 @@ export default async function DashboardPage({
                   href="/profile/me"
                   className="block p-3 border rounded-md hover:bg-accent transition-colors"
                 >
-                  <div className="font-medium">Your Profile</div>
+                  <div className="font-medium text-base md:text-lg">Your Profile</div>
                   <div className="text-sm text-muted-foreground">
                     Update your skills and information
                   </div>
