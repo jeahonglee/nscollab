@@ -25,7 +25,7 @@ export default async function TimelinePage({
 
   // Determine how many weeks of comments to load
   const params = await searchParams;
-  const weeksToLoad = parseInt(params.weeks || '2', 10);
+  const weeksToLoad = parseInt(params.weeks || '1', 10);
 
   // Calculate the date range for comments
   const today = new Date();
@@ -249,12 +249,12 @@ export default async function TimelinePage({
 
   return (
     <div className="space-y-6">
-      <div>
+      {/* <div>
         <h1 className="text-3xl md:text-4xl font-bold">Timeline</h1>
         <p className="text-base md:text-lg text-muted-foreground">
           Recent activity from the NS Collab
         </p>
-      </div>
+      </div> */}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2">
@@ -263,12 +263,11 @@ export default async function TimelinePage({
               <div className="flex justify-between items-center">
                 <CardTitle className="flex items-center text-2xl">
                   <MessageSquare className="h-5 w-5 mr-2" />
-                  Recent Discussions
+                  Recent Activities
                 </CardTitle>
                 <div className="text-sm text-muted-foreground flex items-center">
                   <Clock className="h-4 w-4 mr-1" />
-                  Showing {weeksToLoad} week{weeksToLoad !== 1 ? 's' : ''} of
-                  comments
+                  {weeksToLoad} week{weeksToLoad !== 1 ? 's' : ''}
                 </div>
               </div>
               <div className="text-sm text-muted-foreground mt-1">
