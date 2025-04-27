@@ -45,7 +45,7 @@ export function ProfileCard({ profile, currentUserId }: ProfileCardProps) {
     {
       icon: FaTwitter,
       url: profile.x_handle
-        ? `https://twitter.com/${profile.x_handle.replace('@', '')}`
+        ? `https://x.com/${profile.x_handle.replace('@', '')}`
         : null,
     },
     {
@@ -130,7 +130,7 @@ export function ProfileCard({ profile, currentUserId }: ProfileCardProps) {
           </div>
         )}
 
-        {profile.status_tags && profile.status_tags.length > 0 && (
+        {/* {profile.status_tags && profile.status_tags.length > 0 && (
           <div className="flex flex-wrap gap-1">
             {profile.status_tags.map((tag) => (
               <Badge key={tag} variant="outline" className="text-xs">
@@ -138,7 +138,7 @@ export function ProfileCard({ profile, currentUserId }: ProfileCardProps) {
               </Badge>
             ))}
           </div>
-        )}
+        )} */}
       </CardContent>
 
       <CardFooter className="py-3 border-t">
