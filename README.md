@@ -40,7 +40,7 @@ Based on the [Product Requirements Document (PRD)](./docs/PRD.md), key features 
   - Specify needs (e.g., `Need Designer`, `Need Frontend Dev`).
   - Comment/update feed for ongoing discussion and activity tracking.
 - **Discovery:**
-  - **People Directory:** Searchable and filterable member list.
+  - **Members Directory:** Searchable and filterable member list.
   - **Idea Hub:** Browseable ideas via List, Kanban views with filtering/sorting.
 - **Privacy:** Platform access restricted to authenticated NS members.
 

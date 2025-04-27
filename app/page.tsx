@@ -21,7 +21,7 @@ export default async function Home() {
 
   // If authenticated, redirect to dashboard
   if (user) {
-    redirect('/dashboard');
+    redirect('/timeline');
   }
 
   // Show landing page for non-signed-in users
@@ -47,7 +47,7 @@ export default async function Home() {
         <Card className="h-full">
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle>People Directory</CardTitle>
+              <CardTitle>Members Directory</CardTitle>
               <Users className="h-5 w-5 text-muted-foreground" />
             </div>
             <CardDescription>
@@ -65,7 +65,7 @@ export default async function Home() {
         <Card className="h-full">
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle>Idea Hub</CardTitle>
+              <CardTitle>Projects / Ideas</CardTitle>
               <Lightbulb className="h-5 w-5 text-muted-foreground" />
             </div>
             <CardDescription>Discover and share project ideas</CardDescription>

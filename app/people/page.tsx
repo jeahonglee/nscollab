@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Search } from 'lucide-react';
-import { AutoSubmitSwitch } from '@/components/filter/auto-submit-switch';
+// import { AutoSubmitSwitch } from '@/components/filter/auto-submit-switch';
 import { format } from 'date-fns';
 
 export default async function PeoplePage({
@@ -128,7 +128,7 @@ export default async function PeoplePage({
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">People Directory</h1>
+          <h1 className="text-3xl font-bold">Members Directory</h1>
           <p className="text-muted-foreground">
             Discover NS members, their skills, and what they&apos;re working on
           </p>

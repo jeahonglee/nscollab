@@ -20,8 +20,12 @@ import {
 // Simple inline UserMenu component
 function InlineUserMenu({ user }: { user: User }) {
   const router = useRouter();
-  const [profile, setProfile] = useState<{id: string; full_name: string | null; avatar_url: string | null} | null>(null);
-  
+  const [profile, setProfile] = useState<{
+    id: string;
+    full_name: string | null;
+    avatar_url: string | null;
+  } | null>(null);
+
   // Get user initials for avatar fallback with consistent server/client rendering
   const getInitials = () => {
     try {
@@ -29,20 +33,20 @@ function InlineUserMenu({ user }: { user: User }) {
         // Use a deterministic approach for consistent rendering
         const parts = profile.full_name.trim().split(/\s+/);
         const initials = parts
-          .filter(part => part.length > 0)
-          .map(part => part.charAt(0))
+          .filter((part) => part.length > 0)
+          .map((part) => part.charAt(0))
           .join('')
           .toUpperCase()
           .substring(0, 2);
-          
+
         return initials || 'NS';
       }
-      
+
       // Fallback to email if no full name
       if (user.email && typeof user.email === 'string') {
         return user.email.trim().substring(0, 2).toUpperCase() || 'NS';
       }
-      
+
       return 'NS';
     } catch {
       // Failsafe
@@ -60,7 +64,7 @@ function InlineUserMenu({ user }: { user: User }) {
           .select('id, full_name, avatar_url')
           .eq('id', user.id)
           .single();
-        
+
         if (data) {
           setProfile(data);
         }
@@ -81,41 +85,50 @@ function InlineUserMenu({ user }: { user: User }) {
       <DropdownMenuTrigger asChild>
         <button className="avatar-button rounded-full focus:outline-none focus:ring-2 focus:ring-ring">
           <Avatar className="h-8 w-8">
-            <AvatarImage src={profile?.avatar_url || ''} alt={profile?.full_name || user.email || ''} />
+            <AvatarImage
+              src={profile?.avatar_url || ''}
+              alt={profile?.full_name || user.email || ''}
+            />
             <AvatarFallback>{getInitials()}</AvatarFallback>
           </Avatar>
         </button>
       </DropdownMenuTrigger>
-      
+
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel>
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">{profile?.full_name || 'NS Member'}</p>
-            <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
+            <p className="text-sm font-medium leading-none">
+              {profile?.full_name || 'NS Member'}
+            </p>
+            <p className="text-xs leading-none text-muted-foreground">
+              {user.email}
+            </p>
           </div>
         </DropdownMenuLabel>
-        
+
         <DropdownMenuSeparator />
-        
+
         <DropdownMenuItem asChild>
-          <Link href="/profile/me">Profile</Link>
+          <Link href="/profile/me">Edit My Profile</Link>
         </DropdownMenuItem>
-        
+
         <DropdownMenuItem asChild>
-          <Link href="/ideas/new">Create Idea</Link>
+          <Link href="/ideas/new">Add New Project/Idea</Link>
         </DropdownMenuItem>
-        
+
         <DropdownMenuSeparator />
-        
-        <DropdownMenuItem onClick={signOut}>
-          Log out
-        </DropdownMenuItem>
+
+        <DropdownMenuItem onClick={signOut}>Log out</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
 }
 
-export default function NavBarClient({ initialUser }: { initialUser: User | null }) {
+export default function NavBarClient({
+  initialUser,
+}: {
+  initialUser: User | null;
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const [user] = useState<User | null>(initialUser);
@@ -123,6 +136,7 @@ export default function NavBarClient({ initialUser }: { initialUser: User | null
   // Prefetch important routes for faster navigation
   useEffect(() => {
     // Prefetch key routes
+    router.prefetch('/timeline');
     router.prefetch('/people');
     router.prefetch('/ideas');
     if (user) {
@@ -136,31 +150,50 @@ export default function NavBarClient({ initialUser }: { initialUser: User | null
   return (
     <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-14 items-center">
-        <div className="mr-4 flex">
+        <div className="flex items-center">
           <Link href="/" className="flex items-center space-x-3">
             <NSLogo width={18} height={20} />
-            <span className="font-bold text-lg ns-collab-logo-text">NS Collab</span>
+            <span className="font-bold text-lg ns-collab-logo-text">
+              NS Collab
+            </span>
           </Link>
-        </div>
-        <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
-          <nav className="flex items-center space-x-4">
+
+          {/* Navigation menu positioned next to logo, hidden on mobile */}
+          <nav className="hidden md:flex items-center ml-6 space-x-3">
             <Link
-              href="/people"
-              className={`text-sm font-medium transition-colors hover:text-foreground/80 ${
-                pathname === '/people' ? 'text-foreground' : 'text-foreground/60'
+              href="/timeline"
+              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all border ${
+                pathname === '/timeline'
+                  ? 'bg-primary text-primary-foreground border-primary-foreground shadow-sm'
+                  : 'bg-secondary/80 text-secondary-foreground border-secondary hover:bg-secondary'
               }`}
             >
-              People
+              Timeline
+            </Link>
+            <Link
+              href="/people"
+              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all border ${
+                pathname === '/people'
+                  ? 'bg-primary text-primary-foreground border-primary-foreground shadow-sm'
+                  : 'bg-secondary/80 text-secondary-foreground border-secondary hover:bg-secondary'
+              }`}
+            >
+              Members
             </Link>
             <Link
               href="/ideas"
-              className={`text-sm font-medium transition-colors hover:text-foreground/80 ${
-                pathname.startsWith('/ideas') ? 'text-foreground' : 'text-foreground/60'
+              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all border ${
+                pathname.startsWith('/ideas')
+                  ? 'bg-primary text-primary-foreground border-primary-foreground shadow-sm'
+                  : 'bg-secondary/80 text-secondary-foreground border-secondary hover:bg-secondary'
               }`}
             >
-              Ideas
+              Projects
             </Link>
           </nav>
+        </div>
+
+        <div className="flex flex-1 items-center justify-end">
           <div className="flex items-center gap-2">
             {user ? (
               <InlineUserMenu user={user} />

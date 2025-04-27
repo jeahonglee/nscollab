@@ -114,7 +114,7 @@ export default async function ProfilePage({
         className="flex items-center text-sm text-muted-foreground hover:text-foreground mb-4"
       >
         <ArrowLeft className="h-4 w-4 mr-2" />
-        Back to People Directory
+        Back to Members Directory
       </Link>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

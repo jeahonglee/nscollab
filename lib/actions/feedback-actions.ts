@@ -30,8 +30,8 @@ export async function addFeedback(message: string) {
     return { error: 'Failed to add feedback. Please try again.' };
   }
 
-  // Revalidate the dashboard page to show the new feedback
-  revalidatePath('/dashboard');
+  // Revalidate the timeline page to show the new feedback
+  revalidatePath('/timeline');
   return { success: true };
 }
 
@@ -57,7 +57,7 @@ export async function deleteFeedback(id: string) {
     return { error: 'Failed to delete feedback. Please try again.' };
   }
 
-  // Revalidate the dashboard page
-  revalidatePath('/dashboard');
+  // Revalidate the timeline page
+  revalidatePath('/timeline');
   return { success: true };
 }

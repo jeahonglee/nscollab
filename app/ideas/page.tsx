@@ -11,23 +11,26 @@ import { Plus } from 'lucide-react';
 export default async function IdeasPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string }>  
+  searchParams: Promise<{ status?: string }>;
 }) {
   const supabase = await createClient();
-  
+
   // Check if user is authenticated
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) {
     redirect('/sign-in');
   }
-  
+
   // Get filter parameter
   const statusFilter = (await searchParams).status || '';
-  
+
   // Build query
   let query = supabase
     .from('ideas')
-    .select(`
+    .select(
+      `
       *,
       profile: profiles!ideas_submitter_user_id_fkey (
         id, full_name, avatar_url
@@ -38,54 +41,55 @@ export default async function IdeasPage({
           id, full_name, avatar_url
         )
       )
-    `)
+    `
+    )
     .eq('is_archived', false);
-  
+
   // Apply status filter if present
   if (statusFilter) {
     query = query.eq('status', statusFilter);
   }
-  
+
   // Always sort by most recent activity
   query = query.order('last_activity_at', { ascending: false });
-  
+
   // Execute query
   const { data: ideas, error } = await query;
-  
+
   if (error) {
     console.error('Error fetching ideas:', error);
   }
-  
+
   // Prepare ideas list (now no grouping needed)
-  const ideasList = ideas as IdeaWithRelations[] || [];
+  const ideasList = (ideas as IdeaWithRelations[]) || [];
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Idea Hub</h1>
+          <h1 className="text-3xl font-bold">Projects & Ideas</h1>
           <p className="text-muted-foreground">
             Discover project ideas from NS members or share your own
           </p>
         </div>
-        
+
         <div className="flex items-center gap-2">
           <Button asChild>
             <Link href="/ideas/new">
               <Plus className="h-4 w-4 mr-2" />
-              New Idea
+              New
             </Link>
           </Button>
         </div>
       </div>
-      
+
       {/* Status filter badges */}
       <div className="flex flex-wrap gap-2 mb-6">
         {statusFilter && (
           <Badge variant="secondary" className="gap-1">
             {statusFilter}
             <Link
-              href="/ideas" 
+              href="/ideas"
               className="ml-1 hover:text-destructive"
               aria-label="Remove status filter"
             >
@@ -93,27 +97,31 @@ export default async function IdeasPage({
             </Link>
           </Badge>
         )}
-        
-        {!statusFilter && IDEA_STATUSES.map(status => (
-          <a key={status} href={`/ideas?status=${encodeURIComponent(status)}`}>
-            <Badge 
-              variant="outline" 
-              className="hover:bg-accent cursor-pointer"
+
+        {!statusFilter &&
+          IDEA_STATUSES.map((status) => (
+            <a
+              key={status}
+              href={`/ideas?status=${encodeURIComponent(status)}`}
             >
-              {status}
-            </Badge>
-          </a>
-        ))}
+              <Badge
+                variant="outline"
+                className="hover:bg-accent cursor-pointer"
+              >
+                {status}
+              </Badge>
+            </a>
+          ))}
       </div>
-      
+
       {/* Ideas list */}
       <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {ideasList.map(idea => (
+          {ideasList.map((idea) => (
             <IdeaCard key={idea.id} idea={idea} />
           ))}
         </div>
-        
+
         {ideasList.length === 0 && (
           <div className="text-center p-12 border rounded-lg">
             <h3 className="text-lg font-medium">No ideas yet</h3>

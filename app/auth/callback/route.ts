@@ -43,26 +43,40 @@ export async function GET(request: Request) {
 
       // Check if the Discord username is in the whitelist
       if (discordUsername) {
-        console.log('AUTH DEBUG: Checking whitelist for Discord username:', discordUsername);
-        
+        console.log(
+          'AUTH DEBUG: Checking whitelist for Discord username:',
+          discordUsername
+        );
+
         // First, verify what's in the whitelist table directly
         const { data: whitelistEntries, error: fetchError } = await supabase
           .from('discord_whitelist')
           .select('username')
-          .order('username'); 
-          
-        if (fetchError) {
-          console.error('AUTH DEBUG: Error fetching whitelist entries:', fetchError);
-        } else {
-          console.log('AUTH DEBUG: Whitelist entries:', whitelistEntries.map(e => e.username));
-        }
-        
-        // Now check using the RPC function
-        const { data: whitelistData, error: whitelistError } = await supabase
-          .rpc('is_discord_username_whitelisted', { input_username: discordUsername });
+          .order('username');
 
-        console.log('AUTH DEBUG: RPC result:', { whitelistData, whitelistError });
-          
+        if (fetchError) {
+          console.error(
+            'AUTH DEBUG: Error fetching whitelist entries:',
+            fetchError
+          );
+        } else {
+          console.log(
+            'AUTH DEBUG: Whitelist entries:',
+            whitelistEntries.map((e) => e.username)
+          );
+        }
+
+        // Now check using the RPC function
+        const { data: whitelistData, error: whitelistError } =
+          await supabase.rpc('is_discord_username_whitelisted', {
+            input_username: discordUsername,
+          });
+
+        console.log('AUTH DEBUG: RPC result:', {
+          whitelistData,
+          whitelistError,
+        });
+
         if (whitelistError) {
           console.error('Error checking whitelist:', whitelistError);
           // If there's an error checking the whitelist, sign out the user and redirect
@@ -73,13 +87,17 @@ export async function GET(request: Request) {
 
         // If username is not in whitelist, sign out and redirect to not-whitelisted page
         if (!whitelistData) {
-          console.log(`User ${discordUsername} not in whitelist, signing out and redirecting`);
+          console.log(
+            `User ${discordUsername} not in whitelist, signing out and redirecting`
+          );
           await supabase.auth.signOut();
           const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || origin;
           return NextResponse.redirect(`${siteUrl}/not-whitelisted`);
         }
-        
-        console.log('AUTH DEBUG: User is whitelisted, continuing login process');
+
+        console.log(
+          'AUTH DEBUG: User is whitelisted, continuing login process'
+        );
       } else {
         // If no username was extracted, sign out and redirect to not-whitelisted page
         console.log('No Discord username found, signing out and redirecting');
@@ -146,5 +164,5 @@ export async function GET(request: Request) {
   // URL to redirect to after sign up process completes
   // Use NEXT_PUBLIC_SITE_URL for production or fall back to the request origin
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || origin;
-  return NextResponse.redirect(`${siteUrl}/dashboard`);
+  return NextResponse.redirect(`${siteUrl}/timeline`);
 }
