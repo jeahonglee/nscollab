@@ -283,7 +283,7 @@ export default async function TimelinePage({
                   </div>
                 )}
 
-                {ideasWithComments.map((ideaGroup, index) => (
+                {ideasWithComments.map((ideaGroup) => (
                   <div key={ideaGroup.idea?.id} className="mb-4 py-6 border-b">
                     {/* Idea header with link and creator info */}
                     {ideaGroup.idea && (
@@ -353,7 +353,7 @@ export default async function TimelinePage({
 
                     {/* Simple activity log */}
                     <div className="my-4">
-                      {ideaGroup.comments.slice(0, 4).map((comment, idx) => (
+                      {ideaGroup.comments.slice(0, 4).map((comment) => (
                         <div key={comment.id} className="mb-3 last:mb-0">
                           <div className="flex items-start gap-2 relative pl-4">
                             <div className="absolute left-0 top-2 w-1.5 h-1.5 rounded-full bg-muted"></div>

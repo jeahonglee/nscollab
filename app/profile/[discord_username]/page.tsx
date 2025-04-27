@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
-import { ArrowLeft, ExternalLink, Mail } from 'lucide-react';
+import { ArrowLeft, ExternalLink } from 'lucide-react';
 import { format } from 'date-fns';
 import {
   FaDiscord,
