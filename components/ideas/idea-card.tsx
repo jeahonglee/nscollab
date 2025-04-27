@@ -21,8 +21,6 @@ export function IdeaCard({ idea }: IdeaCardProps) {
     addSuffix: true,
   });
 
-
-
   return (
     <Card className="h-full flex flex-col">
       <CardHeader className="pb-2">
@@ -30,7 +28,9 @@ export function IdeaCard({ idea }: IdeaCardProps) {
           <Badge variant="outline" className="mb-2">
             {idea.status}
           </Badge>
-          <span className="text-xs text-muted-foreground ns-collab-comments">{lastActivity}</span>
+          <span className="text-xs text-muted-foreground ns-collab-comments">
+            {lastActivity}
+          </span>
         </div>
         <Link
           href={`/ideas/${idea.id}`}
@@ -44,7 +44,7 @@ export function IdeaCard({ idea }: IdeaCardProps) {
           {idea.description}
         </p>
 
-        {idea.looking_for_tags && idea.looking_for_tags.length > 0 && (
+        {/* {idea.looking_for_tags && idea.looking_for_tags.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-3">
             {idea.looking_for_tags.map((tag) => (
               <Badge key={tag} variant="outline" className="text-xs">
@@ -52,7 +52,7 @@ export function IdeaCard({ idea }: IdeaCardProps) {
               </Badge>
             ))}
           </div>
-        )}
+        )} */}
       </CardContent>
       <CardFooter className="py-3 border-t">
         <div className="w-full flex items-center justify-between">
