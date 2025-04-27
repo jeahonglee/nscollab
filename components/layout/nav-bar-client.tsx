@@ -26,6 +26,28 @@ function InlineUserMenu({ user }: { user: User }) {
     avatar_url: string | null;
   } | null>(null);
 
+  // Load profile data when component mounts
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const supabase = createClient();
+        const { data } = await supabase
+          .from('profiles')
+          .select('id, full_name, avatar_url')
+          .eq('id', user.id)
+          .single();
+
+        if (data) {
+          setProfile(data);
+        }
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+      }
+    };
+
+    fetchProfile();
+  }, [user.id]);
+
   // Get user initials for avatar fallback with consistent server/client rendering
   const getInitials = () => {
     try {
@@ -54,8 +76,9 @@ function InlineUserMenu({ user }: { user: User }) {
     }
   };
 
-  // Lazy load profile data when menu opens
+  // Update profile data when menu opens if needed
   const handleMenuOpen = async (open: boolean) => {
+    // We still check if profile exists in case it failed to load on mount
     if (open && !profile) {
       try {
         const supabase = createClient();
