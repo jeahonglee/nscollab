@@ -14,9 +14,9 @@ const defaultUrl = process.env.VERCEL_URL
 
 export const metadata = {
   metadataBase: new URL(defaultUrl),
-  title: 'NS Idea Build - Network School Community Platform',
+  title: 'NS Collab - Network School Collaboration Hub',
   description:
-    'Discover NS members, share ideas, and form teams within the Network School community',
+    'Discover NS members, share ideas, and form teams within the Network School ',
 };
 
 const geistSans = Geist({
