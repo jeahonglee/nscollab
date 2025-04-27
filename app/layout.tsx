@@ -17,6 +17,16 @@ export const metadata = {
   title: 'NS Collab - Network School Collaboration Hub',
   description:
     'Discover NS members, share ideas, and form teams within the Network School ',
+  openGraph: {
+    images: [
+      {
+        url: '/opengraph-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'NS Collab Open Graph Image',
+      },
+    ],
+  },
 };
 
 const geistSans = Geist({
