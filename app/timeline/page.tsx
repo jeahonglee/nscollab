@@ -25,7 +25,7 @@ export default async function TimelinePage({
 
   // Determine how many weeks of comments to load
   const params = await searchParams;
-  const weeksToLoad = parseInt(params.weeks || '1', 10);
+  const weeksToLoad = parseInt(params.weeks || '2', 10);
 
   // Calculate the date range for comments
   const today = new Date();
@@ -461,7 +461,7 @@ export default async function TimelinePage({
                   className="block p-3 border rounded-md hover:bg-accent transition-colors"
                 >
                   <div className="font-medium text-base md:text-lg">
-                    Idea Hub
+                    Projects & Ideas
                   </div>
                   <div className="text-sm text-muted-foreground">
                     Browse project ideas or share your own
