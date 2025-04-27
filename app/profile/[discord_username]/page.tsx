@@ -225,7 +225,7 @@ export default async function ProfilePage({
                 )}
 
                 {/* Email Link */}
-                {profileWithStays.email && (
+                {/* {profileWithStays.email && (
                   <a
                     href={`mailto:${profileWithStays.email}`}
                     className="text-foreground hover:text-muted-foreground"
@@ -233,7 +233,7 @@ export default async function ProfilePage({
                   >
                     <Mail className="h-5 w-5" />
                   </a>
-                )}
+                )} */}
 
                 {/* NS Pals Link */}
                 {profileWithStays.nspals_profile_url && (
