@@ -259,39 +259,36 @@ export default async function TimelinePage({
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2">
           <Card>
-            <CardHeader className="pb-3">
+            <CardHeader className="pb-6 border-b-2">
               <div className="flex justify-between items-center">
-                <CardTitle className="flex items-center text-xl md:text-2xl">
+                <CardTitle className="flex items-center text-2xl">
                   <MessageSquare className="h-5 w-5 mr-2" />
                   Recent Discussions
                 </CardTitle>
-                <div className="text-sm md:text-base text-muted-foreground flex items-center">
+                <div className="text-sm text-muted-foreground flex items-center">
                   <Clock className="h-4 w-4 mr-1" />
                   Showing {weeksToLoad} week{weeksToLoad !== 1 ? 's' : ''} of
                   comments
                 </div>
               </div>
-              <div className="text-xs md:text-sm text-muted-foreground mt-1">
+              <div className="text-sm text-muted-foreground mt-1">
                 {format(startDate, 'MMM d, yyyy')} —{' '}
                 {format(new Date(), 'MMM d, yyyy')}
               </div>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2">
+              <div className="space-y-2 mt-2">
                 {ideasWithComments.length === 0 && (
                   <div className="text-center py-8 text-muted-foreground">
                     No recent comments yet. Start a conversation on an idea!
                   </div>
                 )}
 
-                {ideasWithComments.map((ideaGroup) => (
-                  <div
-                    key={ideaGroup.idea?.id}
-                    className="border border-muted rounded-md p-4 md:p-6 mb-4"
-                  >
+                {ideasWithComments.map((ideaGroup, index) => (
+                  <div key={ideaGroup.idea?.id} className="mb-4 py-6 border-b">
                     {/* Idea header with link and creator info */}
                     {ideaGroup.idea && (
-                      <div className="mb-3 pb-2 border-b">
+                      <div className="mb-4">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <Link
@@ -299,11 +296,11 @@ export default async function TimelinePage({
                               className="inline-flex items-center gap-1.5 hover:underline"
                             >
                               <Lightbulb className="h-4 w-4 text-primary" />
-                              <span className="font-medium">
+                              <span className="font-semibold text-lg">
                                 {ideaGroup.idea.title}
                               </span>
                             </Link>
-                            <span className="text-xs md:text-sm px-1.5 py-0.5 bg-muted rounded-full">
+                            <span className="hidden">
                               {ideaGroup.idea.status}
                             </span>
                           </div>
@@ -342,58 +339,55 @@ export default async function TimelinePage({
                             </div>
                           )}
 
-                          {/* Truncated description - only if there are more than 2 comments */}
-                          {ideaGroup.idea.description &&
-                            ideaGroup.comments.length > 2 && (
-                              <div className="text-xs md:text-sm text-muted-foreground line-clamp-1">
-                                {ideaGroup.idea.description.substring(0, 120)}
-                                {ideaGroup.idea.description.length > 120
-                                  ? '...'
-                                  : ''}
-                              </div>
-                            )}
+                          {/* Idea description shown in a cleaner way */}
+                          {ideaGroup.idea.description && (
+                            <div className="text-base text-muted-foreground mt-2">
+                              {ideaGroup.idea.description.substring(0, 180)}
+                              {ideaGroup.idea.description.length > 180
+                                ? '...'
+                                : ''}
+                            </div>
+                          )}
                         </div>
                       </div>
                     )}
 
-                    {/* Comment list for this idea */}
-                    <div className="space-y-3 pl-3 md:pl-5 border-l border-muted">
-                      {(ideaGroup.comments.length <= 5
-                        ? ideaGroup.comments
-                        : ideaGroup.comments.slice(0, 5)
-                      ).map((comment) => (
-                        <div key={comment.id} className="pb-2 last:pb-0">
-                          <div className="flex items-start gap-2">
+                    {/* Simple activity log */}
+                    <div className="my-4">
+                      {ideaGroup.comments.slice(0, 4).map((comment, idx) => (
+                        <div key={comment.id} className="mb-3 last:mb-0">
+                          <div className="flex items-start gap-2 relative pl-4">
+                            <div className="absolute left-0 top-2 w-1.5 h-1.5 rounded-full bg-muted"></div>
                             {/* Commenter avatar with link */}
                             {comment.profile && (
                               <Link
                                 href={`/profile/${comment.profile.discord_username || comment.profile.id}`}
                                 className="shrink-0"
                               >
-                                <Avatar className="h-7 w-7 md:h-8 md:w-8 mt-0.5">
+                                <Avatar className="h-6 w-6 md:h-7 md:w-7">
                                   <AvatarImage
                                     src={comment.profile.avatar_url || ''}
                                     alt={comment.profile.full_name || ''}
                                   />
-                                  <AvatarFallback className="text-[11px] md:text-[13px]">
+                                  <AvatarFallback className="text-[10px] md:text-[11px]">
                                     {getInitials(comment.profile.full_name)}
                                   </AvatarFallback>
                                 </Avatar>
                               </Link>
                             )}
 
-                            <div className="flex-1 text-xs md:text-sm">
-                              <div className="flex flex-wrap items-center gap-x-1.5 text-xs md:text-sm">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-x-1.5 text-sm">
                                 {/* Commenter name with link */}
                                 {comment.profile && (
                                   <Link
                                     href={`/profile/${comment.profile.discord_username || comment.profile.id}`}
-                                    className="font-semibold hover:underline"
+                                    className="font-medium hover:underline"
                                   >
                                     {comment.profile.full_name}
                                   </Link>
                                 )}
-                                <span className="text-muted-foreground">
+                                <span className="text-muted-foreground text-xs">
                                   {formatDistanceToNow(
                                     new Date(comment.created_at),
                                     { addSuffix: true }
@@ -402,7 +396,7 @@ export default async function TimelinePage({
                               </div>
 
                               {/* Comment content */}
-                              <div className="mt-0.5 text-xs md:text-sm p-2 bg-muted/30 rounded whitespace-pre-line">
+                              <div className="mt-1 text-sm">
                                 {comment.comment_text}
                               </div>
                             </div>
@@ -410,18 +404,12 @@ export default async function TimelinePage({
                         </div>
                       ))}
 
-                      {/* Show load more button if there are more than 5 comments */}
-                      {ideaGroup.comments.length > 5 && (
-                        <Link href={`/ideas/${ideaGroup.idea?.id}`}>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="w-full text-xs md:text-sm mt-2"
-                          >
-                            <ChevronDown className="h-3 w-3 mr-1" />
-                            {ideaGroup.comments.length - 5} more comment
-                            {ideaGroup.comments.length - 5 !== 1 ? 's' : ''}
-                          </Button>
+                      {ideaGroup.comments.length > 4 && (
+                        <Link
+                          href={`/ideas/${ideaGroup.idea?.id}`}
+                          className="text-primary hover:underline text-sm flex items-center mt-1"
+                        >
+                          {ideaGroup.comments.length - 4} more comments
                         </Link>
                       )}
                     </div>
