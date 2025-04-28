@@ -51,7 +51,6 @@ export const SimpleContributionGraph: React.FC<SimpleContributionGraphProps> = (
   colorScheme = DEFAULT_COLORS,
   className = '',
   showTooltips = true,
-  rightAligned = true, // Default to right-aligned (show most recent)
   dense = false, // Default to standard spacing
 }) => {
   // Always generate a reasonable amount of data, container will handle overflow
@@ -74,7 +73,7 @@ export const SimpleContributionGraph: React.FC<SimpleContributionGraphProps> = (
   const daysData: Array<{ date: string; count: number }> = [];
   
   // Fill days array with data including today
-  let currentDate = new Date(startDate);
+  const currentDate = new Date(startDate);
   while (currentDate <= endDate) {
     const dateStr = currentDate.toISOString().split('T')[0];
     const count = contributionsMap.get(dateStr) || 0;

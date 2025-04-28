@@ -14,7 +14,7 @@ interface ContributionGraphProps {
 }
 
 // Default to 13 weeks (approximately 3 months)
-const DEFAULT_WEEKS = 13;
+// Removed unused DEFAULT_WEEKS13;
 const DAYS_IN_WEEK = 7;
 
 // Default color scheme (similar to GitHub)
@@ -96,7 +96,7 @@ export const ContributionGraph: React.FC<ContributionGraphProps> = ({
   const weeks: Array<Array<{ date: string; count: number } | null>> = [];
   const monthLabels: Array<{ label: string; columnIndex: number }> = [];
 
-  let currentDate = new Date(startDate);
+  const currentDate = new Date(startDate);
   let lastMonth = -1;
   
   // Fill in the grid with dates and contribution data
