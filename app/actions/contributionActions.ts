@@ -12,12 +12,19 @@ interface ContributionData {
 export async function getUserContributions(userId: string): Promise<ContributionData[]> {
   noStore(); // Ensure data is fetched fresh on each request
   const supabase = await createClient();
+  
+  // Get current date at the end of the day to include all of today's activity
+  const now = new Date();
+  const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+  const oneYearAgo = new Date(todayEnd);
+  oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
 
   const { data, error } = await supabase
     .from('idea_comments')
     .select('created_at')
     .eq('user_id', userId)
-    .gte('created_at', new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString()); // Filter for last year
+    .gte('created_at', oneYearAgo.toISOString())
+    .lte('created_at', todayEnd.toISOString()) // Explicitly include up to now
 
   if (error) {
     console.error('Error fetching user contributions:', error);
@@ -45,12 +52,19 @@ export async function getUserContributions(userId: string): Promise<Contribution
 export async function getIdeaContributions(ideaId: string): Promise<ContributionData[]> {
     noStore(); // Ensure data is fetched fresh on each request
     const supabase = await createClient();
+    
+    // Get current date at the end of the day to include all of today's activity
+    const now = new Date();
+    const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+    const oneYearAgo = new Date(todayEnd);
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
 
     const { data, error } = await supabase
       .from('idea_comments')
       .select('created_at')
       .eq('idea_id', ideaId)
-      .gte('created_at', new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString()); // Filter for last year
+      .gte('created_at', oneYearAgo.toISOString())
+      .lte('created_at', todayEnd.toISOString()) // Explicitly include up to now
 
     if (error) {
       console.error('Error fetching idea contributions:', error);
@@ -79,13 +93,17 @@ export async function getAllIdeasContributions(): Promise<Record<string, Contrib
     const supabase = await createClient();
     
     // Get comments from the last 90 days for all ideas
-    const ninetyDaysAgo = new Date();
+    // Use end of today to ensure we get all recent activities
+    const now = new Date();
+    const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+    const ninetyDaysAgo = new Date(todayEnd);
     ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
     
     const { data, error } = await supabase
       .from('idea_comments')
       .select('idea_id, created_at')
-      .gte('created_at', ninetyDaysAgo.toISOString());
+      .gte('created_at', ninetyDaysAgo.toISOString())
+      .lte('created_at', todayEnd.toISOString());
       
     if (error) {
       console.error('Error fetching all ideas contributions:', error);
@@ -125,13 +143,17 @@ export async function getAllUsersContributions(): Promise<Record<string, Contrib
     const supabase = await createClient();
     
     // Get comments from the last 90 days for all users
-    const ninetyDaysAgo = new Date();
+    // Use end of today to ensure we get all recent activities
+    const now = new Date();
+    const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+    const ninetyDaysAgo = new Date(todayEnd);
     ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
     
     const { data, error } = await supabase
       .from('idea_comments')
       .select('user_id, created_at')
-      .gte('created_at', ninetyDaysAgo.toISOString());
+      .gte('created_at', ninetyDaysAgo.toISOString())
+      .lte('created_at', todayEnd.toISOString());
       
     if (error) {
       console.error('Error fetching all users contributions:', error);

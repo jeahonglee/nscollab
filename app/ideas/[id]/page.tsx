@@ -13,6 +13,7 @@ import { TeamMembersList } from '@/components/ideas/team-members-list';
 import { DeleteIdeaButton } from '@/components/ideas/delete-idea-button';
 import { ContributionGraph } from '@/components/ui/contribution-graph';
 import { getIdeaContributions } from '@/app/actions/contributionActions';
+import { unstable_noStore as noStore } from 'next/cache';
 
 export default async function IdeaPage({
   params,
@@ -62,10 +63,12 @@ export default async function IdeaPage({
     notFound();
   }
 
-  // Fetch contribution data for this specific idea
-  const contributionData = await getIdeaContributions(ideaId);
-
+  // First cast to the proper type
   const ideaWithRelations = idea as IdeaWithRelations;
+  
+  // Then fetch contribution data with cache busting for fresh data
+  noStore();
+  const contributionData = await getIdeaContributions(ideaWithRelations.id);
 
   // Calculate if current user is a member of this idea
   const isMember = ideaWithRelations.members?.some(

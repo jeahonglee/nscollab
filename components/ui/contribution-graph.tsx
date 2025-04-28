@@ -44,6 +44,21 @@ const formatDate = (dateStr: string): string => {
   return adjustedDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 };
 
+// Helper to check if two dates are in the same week
+const isDateInSameWeek = (date1: Date, date2: Date): boolean => {
+  // Get the start of the week (Sunday) for both dates
+  const startOfWeek1 = new Date(date1);
+  startOfWeek1.setDate(date1.getDate() - date1.getDay());
+  startOfWeek1.setHours(0, 0, 0, 0);
+  
+  const startOfWeek2 = new Date(date2);
+  startOfWeek2.setDate(date2.getDate() - date2.getDay());
+  startOfWeek2.setHours(0, 0, 0, 0);
+  
+  // Compare the starting dates of the weeks
+  return startOfWeek1.getTime() === startOfWeek2.getTime();
+};
+
 export const ContributionGraph: React.FC<ContributionGraphProps> = ({
   data,
   title = "Contributions in the last 3 months",
@@ -52,56 +67,88 @@ export const ContributionGraph: React.FC<ContributionGraphProps> = ({
 }) => {
   // Calculate number of weeks based on months (approximately 4.33 weeks per month)
   const weeksToShow = Math.ceil(months * 4.33);
-  const endDate = new Date();
-  const startDate = new Date();
-  startDate.setDate(endDate.getDate() - (weeksToShow * DAYS_IN_WEEK) + 1); // Go back by the number of weeks
-  // Adjust to the beginning of the week (Sunday)
+  
+  // Get current date - making sure to use the actual current date (April 29, 2025)
+  const today = new Date();
+  
+  // Calculate the end of the current week (Saturday)
+  const endOfWeek = new Date(today);
+  const daysToEndOfWeek = 6 - today.getDay(); // Days until Saturday
+  endOfWeek.setDate(today.getDate() + daysToEndOfWeek);
+  
+  // Set to end of day to ensure we include all of today's activity
+  const endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
+  
+  // Get start date by going back the required number of weeks from the end of current week
+  const startDate = new Date(endOfWeek);
+  startDate.setDate(endOfWeek.getDate() - (weeksToShow * DAYS_IN_WEEK) + 1);
+  
+  // Adjust to start at the beginning of the week (Sunday)
   startDate.setDate(startDate.getDate() - startDate.getDay());
-
+  
+  // Create a map of counts by date
   const contributionsMap = new Map<string, number>();
   data.forEach(item => {
     contributionsMap.set(item.date, item.count);
   });
 
-  const weeks: Array<Array<{ date: string; count: number } | null>> = Array.from({ length: weeksToShow }, () => Array(DAYS_IN_WEEK).fill(null));
+  // Create weeks array for the grid
+  const weeks: Array<Array<{ date: string; count: number } | null>> = [];
   const monthLabels: Array<{ label: string; columnIndex: number }> = [];
 
   let currentDate = new Date(startDate);
   let lastMonth = -1;
-
+  
+  // Fill in the grid with dates and contribution data
   for (let week = 0; week < weeksToShow; week++) {
+    const weekData: Array<{ date: string; count: number } | null> = Array(DAYS_IN_WEEK).fill(null);
+    weeks.push(weekData);
+    
     for (let day = 0; day < DAYS_IN_WEEK; day++) {
       const dateStr = currentDate.toISOString().split('T')[0]; // YYYY-MM-DD
-
-      // Only fill cells within the actual last year range relative to endDate
-      if (currentDate <= endDate) {
-        const count = contributionsMap.get(dateStr) || 0;
-        // Place the day in the correct column based on its day of the week
-        weeks[week][currentDate.getDay()] = { date: dateStr, count };
-
-        // Track month changes for labels
-        const currentMonth = currentDate.getMonth();
-        if (currentMonth !== lastMonth) {
-            // Only add a label for the first day of each month
-            if (currentDate.getDate() === 1 || (week === 0 && day === 0)) {
-                // Store month and exact column position
-                monthLabels.push({ 
-                  label: currentDate.toLocaleDateString('en-US', { month: 'short' }),
-                  columnIndex: week
-                });
-            }
-            lastMonth = currentMonth;
+      
+      // Track month changes for labels
+      const currentMonth = currentDate.getMonth();
+      if (currentMonth !== lastMonth) {
+        // Add month label for the first occurrence
+        if (currentDate.getDate() <= 7) {
+          monthLabels.push({ 
+            label: currentDate.toLocaleDateString('en-US', { month: 'short' }),
+            columnIndex: week
+          });
         }
-      } else {
-        // For future dates, add null to maintain grid structure but don't display
-        weeks[week][currentDate.getDay()] = null;
+        lastMonth = currentMonth;
       }
-
+      
+      // Always include cells for the current week, marking future dates as empty
+      const isFutureDate = currentDate > endDate;
+      const isCurrentWeek = isDateInSameWeek(currentDate, today);
+      
+      // Add the cell data - either with contribution count or empty for future dates
+      if (!isFutureDate) {
+        // Regular date with actual data
+        const count = contributionsMap.get(dateStr) || 0;
+        weekData[day] = { date: dateStr, count };
+      } else if (isCurrentWeek) {
+        // Future date but in current week - show as empty tile
+        weekData[day] = { date: dateStr, count: 0 };
+      }
+      
       // Move to the next day
       currentDate.setDate(currentDate.getDate() + 1);
     }
   }
-
+  
+  // Process month labels to avoid overlapping
+  // Get unique months by finding the earliest occurrence of each month
+  const uniqueMonthLabels = monthLabels
+    .reduce((unique, current) => {
+      if (!unique.some(item => item.label === current.label)) {
+        unique.push(current);
+      }
+      return unique;
+    }, [] as typeof monthLabels)
+    .sort((a, b) => a.columnIndex - b.columnIndex);
 
   return (
     <TooltipProvider>
@@ -110,24 +157,11 @@ export const ContributionGraph: React.FC<ContributionGraphProps> = ({
           <h3 className="text-lg font-semibold leading-none tracking-tight">{title}</h3>
         </div>
         <div className="p-6 pt-3">
-        <div className="flex flex-col">
-           {/* Month Labels */}
-           <div className="flex mb-1 relative" style={{ marginLeft: '24px', height: '16px' }}>
-            {/* Get unique months and their positions */}
-            {monthLabels
-              // Group by month name and keep only the first occurrence of each month
-              .reduce((unique, current) => {
-                if (!unique.some(item => item.label === current.label)) {
-                  unique.push(current);
-                }
-                return unique;
-              }, [] as typeof monthLabels)
-              // Sort chronologically (assuming the data comes in date order)
-              .sort((a, b) => a.columnIndex - b.columnIndex)
-              // Only use the relevant months (up to 3 for a 3-month view)
-              .slice(-3)
-              // Position labels exactly above their starting columns
-              .map(({ label, columnIndex }) => (
+          <div className="flex flex-col">
+            {/* Month Labels */}
+            <div className="flex mb-1 relative" style={{ marginLeft: '24px', height: '16px' }}>
+              {/* Get unique months and their positions */}
+              {uniqueMonthLabels.map(({ label, columnIndex }) => (
                 <div
                   key={label}
                   className="text-xs text-gray-500 dark:text-gray-400 absolute"
@@ -136,59 +170,59 @@ export const ContributionGraph: React.FC<ContributionGraphProps> = ({
                   {label}
                 </div>
               ))}
-          </div>
-
-          <div className="flex">
-            {/* Day Labels */}
-            <div className="flex flex-col justify-between mr-1 text-xs text-gray-500 dark:text-gray-400" style={{ height: `${DAYS_IN_WEEK * (12 + 2) - 2}px`}}>
-              <span></span> {/* Spacer */}
-              <span>Mon</span>
-              <span></span> {/* Spacer */}
-              <span>Wed</span>
-              <span></span> {/* Spacer */}
-              <span>Fri</span>
-              <span></span> {/* Spacer */}
             </div>
 
-            {/* Grid */}
-            <div className="grid grid-flow-col gap-0.5" style={{ gridTemplateRows: `repeat(${DAYS_IN_WEEK}, 12px)`, gridAutoColumns: '12px' }}>
-              {weeks.flat().map((dayData, index) => {
-                 if (!dayData) {
-                     return <div key={`empty-${index}`} className="w-[12px] h-[12px]"></div>;
-                 }
-                const { date, count } = dayData;
-                const colorLevel = getColorLevel(count);
-                const colorClass = colorScheme[colorLevel];
+            <div className="flex">
+              {/* Day Labels */}
+              <div className="flex flex-col justify-between mr-1 text-xs text-gray-500 dark:text-gray-400" style={{ height: `${DAYS_IN_WEEK * (12 + 2) - 2}px`}}>
+                <span></span> {/* Spacer */}
+                <span>Mon</span>
+                <span></span> {/* Spacer */}
+                <span>Wed</span>
+                <span></span> {/* Spacer */}
+                <span>Fri</span>
+                <span></span> {/* Spacer */}
+              </div>
 
-                return (
-                  <Tooltip key={date}>
-                    <TooltipTrigger asChild>
-                      <div
-                        className={`w-[12px] h-[12px] rounded-sm ${colorClass}`}
-                        data-date={date}
-                        data-count={count}
-                      />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p className="text-sm">{count} contribution{count !== 1 ? 's' : ''} on {formatDate(date)}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                );
-              })}
+              {/* Grid */}
+              <div className="grid grid-flow-col gap-0.5" style={{ gridTemplateRows: `repeat(${DAYS_IN_WEEK}, 12px)`, gridAutoColumns: '12px' }}>
+                {weeks.flat().map((dayData, index) => {
+                   if (!dayData) {
+                       return <div key={`empty-${index}`} className="w-[12px] h-[12px]"></div>;
+                   }
+                  const { date, count } = dayData;
+                  const colorLevel = getColorLevel(count);
+                  const colorClass = colorScheme[colorLevel];
+
+                  return (
+                    <Tooltip key={date}>
+                      <TooltipTrigger asChild>
+                        <div
+                          className={`w-[12px] h-[12px] rounded-sm ${colorClass}`}
+                          data-date={date}
+                          data-count={count}
+                        />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="text-sm">{count} contribution{count !== 1 ? 's' : ''} on {formatDate(date)}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  );
+                })}
+              </div>
             </div>
           </div>
-        </div>
 
-         {/* Legend */}
-         <div className="flex items-center justify-end mt-3 text-xs text-gray-500 dark:text-gray-400">
-          <span className="mr-1">Less</span>
-          <div className="flex space-x-1 mx-1">
-            {Object.entries(colorScheme).map(([level, colorClass]) => (
-              <div key={level} className={`w-3 h-3 rounded-sm ${colorClass}`}></div>
-            ))}
+           {/* Legend */}
+           <div className="flex items-center justify-end mt-3 text-xs text-gray-500 dark:text-gray-400">
+            <span className="mr-1">Less</span>
+            <div className="flex space-x-1 mx-1">
+              {Object.entries(colorScheme).map(([level, colorClass]) => (
+                <div key={level} className={`w-3 h-3 rounded-sm ${colorClass}`}></div>
+              ))}
+            </div>
+            <span className="ml-1">More</span>
           </div>
-          <span className="ml-1">More</span>
-        </div>
         </div>
       </div>
     </TooltipProvider>

@@ -57,9 +57,11 @@ export const SimpleContributionGraph: React.FC<SimpleContributionGraphProps> = (
   // Always generate a reasonable amount of data, container will handle overflow
   const daysToGenerate = maxDays;
   
-  // Get current date and calculate start date
-  const endDate = new Date();
-  const startDate = new Date();
+  // Get current date and calculate start date - ensure we're using today's date
+  const today = new Date();
+  // Make sure we're using the last millisecond of today to include the full day
+  const endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
+  const startDate = new Date(endDate);
   startDate.setDate(endDate.getDate() - daysToGenerate);
   
   // Create a map of counts by date
@@ -71,13 +73,19 @@ export const SimpleContributionGraph: React.FC<SimpleContributionGraphProps> = (
   // Create array for days within range
   const daysData: Array<{ date: string; count: number }> = [];
   
-  // Fill days array with data
+  // Fill days array with data including today
   let currentDate = new Date(startDate);
   while (currentDate <= endDate) {
     const dateStr = currentDate.toISOString().split('T')[0];
     const count = contributionsMap.get(dateStr) || 0;
     daysData.push({ date: dateStr, count });
     currentDate.setDate(currentDate.getDate() + 1);
+  }
+  
+  // Ensure we have the current date even if it's not in the data
+  const todayStr = today.toISOString().split('T')[0];
+  if (!daysData.some(day => day.date === todayStr)) {
+    daysData.push({ date: todayStr, count: 0 });
   }
   
   // Keep chronological order (oldest → newest) so newest dates appear on the right

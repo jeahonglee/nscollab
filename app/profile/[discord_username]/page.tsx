@@ -19,6 +19,7 @@ import NextLogo from '@/components/ns-logo';
 import { ProfileIdeaCard } from '@/components/profile/profile-idea-card';
 import { ContributionGraph } from '@/components/ui/contribution-graph';
 import { getUserContributions } from '@/app/actions/contributionActions';
+import { unstable_noStore as noStore } from 'next/cache';
 
 export default async function ProfilePage({
   params,
@@ -58,7 +59,9 @@ export default async function ProfilePage({
     notFound();
   }
 
-  // Fetch contribution data using the server action
+  // Get user contribution data for the profile
+  // Force fresh data with no caching
+  noStore();
   const contributionData = await getUserContributions(profile.id);
 
   const profileWithStays = profile as ProfileWithRelations;
