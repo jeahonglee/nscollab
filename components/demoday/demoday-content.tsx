@@ -1,15 +1,15 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { User } from '@supabase/supabase-js';
 import { createClient } from '@/utils/supabase/client';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Loader2, AlertCircle } from 'lucide-react';
-import { format, startOfMonth, addMonths, subDays, isBefore, parseISO, isPast, isSameMonth, isFuture } from 'date-fns';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { format, startOfMonth, addMonths, parseISO, isPast, isSameMonth } from 'date-fns'; // Import date-fns helpers
 import PitchItem from './pitch-item';
 import PitchModal from './pitch-modal';
+import { AlertCircle } from 'lucide-react';
 
 // Placeholder types - replace with actual types later
 type Pitch = {
@@ -76,7 +76,7 @@ export default function DemodayContent({ serverUser }: DemodayContentProps) {
 
       if (demodayError) throw demodayError;
 
-      let fetchedDemodays = demodayData || [];
+      const fetchedDemodays = demodayData || [];
       let initialSelectedDemoday: DemodayEntry | null = null;
 
       // Ensure current month entry exists, create if not (if needed later)
@@ -102,9 +102,9 @@ export default function DemodayContent({ serverUser }: DemodayContentProps) {
       if (user) {
         await fetchUserIdeas(user.id);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Full error fetching initial demoday data:', JSON.stringify(err, null, 2));
-      setError(`Failed to load initial data: ${err.message || 'Unknown error'}`);
+      setError(`Failed to load initial data: ${err instanceof Error ? err.message : 'Unknown error'}`);
       setPitches([]);
       setAvailableDemodays([]);
     } finally {
@@ -135,9 +135,9 @@ export default function DemodayContent({ serverUser }: DemodayContentProps) {
       if (pitchError) throw pitchError;
       setPitches(pitchData || []);
       setError(null);
-    } catch (err: any) {
+    } catch (err: unknown) {
        console.error('Full error fetching pitches for month:', JSON.stringify(err, null, 2));
-       setError(`Failed to load pitches: ${err.message || 'Unknown error'}`);
+       setError(`Failed to load pitches: ${err instanceof Error ? err.message : 'Unknown error'}`);
        setPitches([]);
     } finally {
         setIsLoading(false);
@@ -208,9 +208,9 @@ export default function DemodayContent({ serverUser }: DemodayContentProps) {
       if (error) throw error;
       setIsModalOpen(false);
       await fetchPitchesForMonth(selectedDemoday.id); // Refresh pitches for the current month
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error submitting pitch:', err);
-      setError(`Failed to submit pitch: ${err.message}`);
+      setError(`Failed to submit pitch: ${err instanceof Error ? err.message : 'Unknown error'}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -234,9 +234,9 @@ export default function DemodayContent({ serverUser }: DemodayContentProps) {
         .eq('id', pitchId);
       if (error) throw error;
       await fetchPitchesForMonth(selectedDemoday.id); // Refresh pitches
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error cancelling pitch:', err);
-      setError(`Failed to cancel pitch: ${err.message}`);
+      setError(`Failed to cancel pitch: ${err instanceof Error ? err.message : 'Unknown error'}`);
     } finally {
       setCancellingPitchId(null);
     }
@@ -250,95 +250,90 @@ export default function DemodayContent({ serverUser }: DemodayContentProps) {
 
   return (
     <>
-      {/* Tabs outside the constrained container */}
-      <div className="w-full border-b">
-        <div className="container mx-auto px-4">
-            {availableDemodays.length > 0 && (
-                 <Tabs value={selectedMonth} onValueChange={handleMonthChange} className="w-full">
-                    <TabsList className="grid w-full grid-cols-2 sm:w-auto sm:inline-flex h-12">
-                      {availableDemodays.map(demoday => (
-                        <TabsTrigger key={demoday.id} value={demoday.event_date} className="text-sm px-6 h-10">
-                            {formatMonthForDisplay(demoday.event_date)}
-                            {!isPast(parseISO(demoday.event_date)) && !isSameMonth(parseISO(demoday.event_date), now) && (
-                                <span className="ml-1.5 text-xs text-blue-500">(Upcoming)</span>
-                            )}
-                        </TabsTrigger>
-                      ))}
+       {/* Tabs outside the constrained container */}
+      <div className="w-full">
+         <div className="container mx-auto px-4">
+             {availableDemodays.length > 0 && (
+                  <Tabs value={selectedMonth} onValueChange={handleMonthChange} className="w-full">
+                    <TabsList className="flex flex-wrap w-full h-auto sm:w-auto sm:inline-flex sm:h-12">
+                       {availableDemodays.map(demoday => (
+                         <TabsTrigger key={demoday.id} value={demoday.event_date} className="text-sm px-6 h-10">
+                             {formatMonthForDisplay(demoday.event_date)}
+                             {!isPast(parseISO(demoday.event_date)) && !isSameMonth(parseISO(demoday.event_date), now) && (
+                                 <span className="ml-1.5 text-xs text-blue-500">(Upcoming)</span>
+                             )}
+                         </TabsTrigger>
+                       ))}
                     </TabsList>
                  </Tabs>
             )}
         </div>
       </div>
 
-      {/* Main content area with max-width */}
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="flex items-center justify-between mb-6">
-            <h1 className="text-3xl font-bold">NS Demoday</h1>
-        </div>
-        <p className="text-muted-foreground mb-8">Monthly showcase of ideas and projects from Network School members.</p>
+       {/* Main content area with max-width */}
+       <div className="container mx-auto px-4 py-8 max-w-4xl">
+         {/* Content Area - Loading/Error/Pitches */}
+         <div className="space-y-4">
+           {isLoading && !selectedMonth ? (
+             <p className="text-center text-muted-foreground">Loading available months...</p>
+           ) : error ? (
+             <Alert variant="destructive">
+               <AlertCircle className="h-4 w-4" />
+               <AlertTitle>Error</AlertTitle>
+               <AlertDescription>{error}</AlertDescription>
+             </Alert>
+           ) : !selectedMonth ? (
+              <p className="text-center text-muted-foreground">No Demodays found or scheduled.</p>
+           ) : isLoading ? (
+              <p className="text-center text-muted-foreground">Loading pitches for {formatMonthForDisplay(selectedMonth)}...</p>
+           ) : pitches.length === 0 ? (
+             <p className="text-center text-muted-foreground py-6">
+               No pitches submitted for {formatMonthForDisplay(selectedMonth)} yet.
+             </p>
+           ) : (
+             pitches.map((pitch, index) => (
+               <PitchItem
+                 key={pitch.id}
+                 pitch={pitch}
+                 index={index}
+                 currentUser={user}
+                 onCancel={handlePitchCancel}
+                 isCancelling={cancellingPitchId === pitch.id}
+                 isEditable={isSelectedMonthEditable} // Pass editability flag
+               />
+             ))
+           )}
+         </div>
 
-        {/* Content Area - Loading/Error/Pitches */}
-        <div className="space-y-4">
-          {isLoading && !selectedMonth ? (
-            <p className="text-center text-muted-foreground">Loading available months...</p>
-          ) : error ? (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Error</AlertTitle>
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          ) : !selectedMonth ? (
-             <p className="text-center text-muted-foreground">No Demodays found or scheduled.</p>
-          ) : isLoading ? (
-             <p className="text-center text-muted-foreground">Loading pitches for {formatMonthForDisplay(selectedMonth)}...</p>
-          ) : pitches.length === 0 ? (
-            <p className="text-center text-muted-foreground py-6">
-              No pitches submitted for {formatMonthForDisplay(selectedMonth)} yet.
-            </p>
-          ) : (
-            pitches.map((pitch, index) => (
-              <PitchItem
-                key={pitch.id}
-                pitch={pitch}
-                index={index}
-                currentUser={user}
-                onCancel={handlePitchCancel}
-                isCancelling={cancellingPitchId === pitch.id}
-                isEditable={isSelectedMonthEditable} // Pass editability flag
-              />
-            ))
-          )}
-        </div>
+         {/* Submit Button Area */}
+         {user && selectedMonth && !isLoading && (
+           <div className="mt-8 flex justify-center">
+             {userHasPitched ? (
+               <Button disabled variant="secondary">
+                 Already Submitted for {formatMonthForDisplay(selectedMonth)}
+               </Button>
+             ) : (
+               <Button
+                 onClick={() => setIsModalOpen(true)}
+                 disabled={!isSelectedMonthEditable} // Disable button if not editable
+               >
+                 Submit Idea to Pitch
+               </Button>
+             )}
+           </div>
+         )}
 
-        {/* Submit Button Area */}
-        {user && selectedMonth && !isLoading && (
-          <div className="mt-8 flex justify-center">
-            {userHasPitched ? (
-              <Button disabled variant="secondary">
-                Already Submitted for {formatMonthForDisplay(selectedMonth)}
-              </Button>
-            ) : (
-              <Button
-                onClick={() => setIsModalOpen(true)}
-                disabled={!isSelectedMonthEditable} // Disable button if not editable
-              >
-                Submit Idea to Pitch
-              </Button>
-            )}
-          </div>
-        )}
-
-        {/* Pitch Submission Modal (Rendered regardless of editability, internal logic handles submission) */}
-        {user && (
-          <PitchModal
-            isOpen={isModalOpen}
-            onClose={() => setIsModalOpen(false)}
-            ideas={userIdeas}
-            onSubmit={handlePitchSubmit}
-            isSubmitting={isSubmitting}
-          />
-        )}
-      </div>
+         {/* Pitch Submission Modal (Rendered regardless of editability, internal logic handles submission) */}
+         {user && (
+           <PitchModal
+             isOpen={isModalOpen}
+             onClose={() => setIsModalOpen(false)}
+             ideas={userIdeas}
+             onSubmit={handlePitchSubmit}
+             isSubmitting={isSubmitting}
+           />
+         )}
+       </div>
     </>
   );
 }

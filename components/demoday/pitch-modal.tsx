@@ -55,15 +55,13 @@ export default function PitchModal({
         <DialogHeader>
           <DialogTitle>Which Idea to Pitch?</DialogTitle>
           <DialogDescription>
-            Select one of your projects or ideas to submit for this month's Demoday.
+            Select one of your projects or ideas to submit for this month&apos;s Demoday.
           </DialogDescription>
         </DialogHeader>
 
         <div className="grid gap-4 py-4">
           {ideas.length === 0 ? (
-            <p className="text-center text-muted-foreground italic">
-              You don't seem to have any projects/ideas yet. Go add one first!
-            </p>
+            <p className="text-sm text-muted-foreground mb-4">Select one of your ideas to pitch at this month&apos;s Demoday.</p>
           ) : (
             <ScrollArea className="h-[200px] w-full pr-4">
               <RadioGroup

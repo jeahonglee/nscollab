@@ -58,8 +58,8 @@ export default function PitchItem({ pitch, index, currentUser, onCancel, isCance
         if (error) throw error;
         setMembers(data || []);
       } catch (error) {
-        console.error(`Error fetching members for idea ${pitch.idea_id}:`, error);
-        setMembers([]); // Set empty on error
+        console.error('Error fetching idea members:', error);
+        setMembers([]);
       } finally {
         setIsLoadingMembers(false);
       }
@@ -68,7 +68,7 @@ export default function PitchItem({ pitch, index, currentUser, onCancel, isCance
     if (pitch.idea_id) {
       fetchMembers();
     }
-  }, [pitch.idea_id]);
+  }, [pitch.idea_id, pitch.pitcher_id, supabase]);
 
   const handleCancelClick = () => {
     onCancel(pitch.id);
