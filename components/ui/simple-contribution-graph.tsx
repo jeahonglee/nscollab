@@ -78,9 +78,9 @@ export const SimpleContributionGraph: React.FC<SimpleContributionGraphProps> = (
     currentDate.setDate(currentDate.getDate() + 1);
   }
   
-  // Always use all days - the container's overflow will handle limiting display
-  // But if right-aligned, we should reverse the order to show most recent days first
-  const displayDays = rightAligned ? [...daysData].reverse() : daysData;
+  // Keep chronological order (oldest → newest) so newest dates appear on the right
+  // The container's overflow-hidden will clip the left side (oldest dates) as needed
+  const displayDays = daysData;
   
   // Determine box size based on size prop
   const boxSize = size === 'sm' ? 'w-2 h-2' : 'w-3 h-3';
