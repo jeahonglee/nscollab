@@ -17,6 +17,19 @@ type Pitch = {
   ideas: { title: string; description: string };
   profiles: { id: string; full_name: string | null; avatar_url: string | null; discord_username: string | null };
 };
+
+// Interface for raw data from Supabase idea_members query
+interface RawIdeaMember {
+  idea_id: string;
+  user_id: string;
+  profiles: {
+    id: string;
+    full_name: string | null;
+    avatar_url: string | null;
+    discord_username: string | null;
+  }[] | null; // profiles is an array here
+}
+
 type IdeaMember = {
   idea_id: string;
   user_id: string;
@@ -49,6 +62,7 @@ export default function PitchItem({ pitch, index, currentUser, onCancel, isCance
         const { data, error } = await supabase
           .from('idea_members')
           .select(`
+            idea_id,
             user_id,
             profiles ( id, full_name, avatar_url, discord_username )
           `)
@@ -56,7 +70,12 @@ export default function PitchItem({ pitch, index, currentUser, onCancel, isCance
           .neq('user_id', pitch.pitcher_id);
 
         if (error) throw error;
-        setMembers(data || []);
+        // Transform data before setting state
+        const transformedMembers: IdeaMember[] = (data || []).map((member: RawIdeaMember) => ({
+          ...member,
+          profiles: member.profiles?.[0] || null // Take the first profile object or null
+        }));
+        setMembers(transformedMembers);
       } catch (error) {
         console.error('Error fetching idea members:', error);
         setMembers([]);
@@ -155,14 +174,4 @@ export default function PitchItem({ pitch, index, currentUser, onCancel, isCance
       )}
     </div>
   );
-}
-
-function getInitials(name: string | null | undefined): string {
-  if (!name) return '?';
-  return name
-    .split(' ')
-    .map(n => n[0])
-    .slice(0, 2)
-    .join('')
-    .toUpperCase();
 }

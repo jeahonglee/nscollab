@@ -12,6 +12,15 @@ import PitchModal from './pitch-modal';
 import { AlertCircle } from 'lucide-react';
 
 // Placeholder types - replace with actual types later
+interface RawPitchData {
+  id: string;
+  idea_id: string;
+  pitcher_id: string;
+  submitted_at: string;
+  ideas: { id: string; title: string; description: string }[] | null;
+  profiles: { id: string; full_name: string | null; avatar_url: string | null; discord_username: string | null }[] | null;
+}
+
 type Pitch = {
   id: string;
   idea_id: string;
@@ -133,7 +142,16 @@ export default function DemodayContent({ serverUser }: DemodayContentProps) {
           .order('submitted_at', { ascending: true });
 
       if (pitchError) throw pitchError;
-      setPitches(pitchData || []);
+
+      // Transform data to match Pitch type
+      const transformedPitches: Pitch[] = (pitchData || []).map((p: RawPitchData) => ({
+        ...p,
+        // Safely access the first element or provide defaults
+        ideas: p.ideas?.[0] || { title: 'Unknown Idea', description: '' }, 
+        profiles: p.profiles?.[0] || { id: '', full_name: 'Unknown User', avatar_url: null, discord_username: null }, 
+      }));
+
+      setPitches(transformedPitches);
       setError(null);
     } catch (err: unknown) {
        console.error('Full error fetching pitches for month:', JSON.stringify(err, null, 2));
