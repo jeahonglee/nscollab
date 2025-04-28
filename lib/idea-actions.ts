@@ -72,39 +72,33 @@ export async function updateIdea(formData: FormData, ideaId: string) {
       'on'
   );
 
-  // Only update if the form has looking_for_tags checkboxes
-  if (
-    LOOKING_FOR_TAGS.some((tag: LookingForTag) =>
-      formData.has(`looking-for-${tag.replace(/\s/g, '-').toLowerCase()}`)
-    )
-  ) {
-    const oldTags = currentIdea.looking_for_tags || [];
-    const newTags = lookingForTags.length > 0 ? lookingForTags : [];
+  // Always compare and update looking_for_tags if necessary
+  const oldTags = currentIdea.looking_for_tags || [];
+  const newTags = lookingForTags.length > 0 ? lookingForTags : [];
 
-    // Check if tags have changed
-    if (JSON.stringify(oldTags.sort()) !== JSON.stringify(newTags.sort())) {
-      updateData.looking_for_tags = newTags.length > 0 ? newTags : null;
+  // Check if tags have changed
+  if (JSON.stringify(oldTags.sort()) !== JSON.stringify(newTags.sort())) {
+    updateData.looking_for_tags = newTags.length > 0 ? newTags : null;
 
-      // Generate a meaningful change message about tags
-      if (oldTags.length === 0 && newTags.length > 0) {
-        changes.push(`Added looking for tags: ${newTags.join(', ')}`);
-      } else if (oldTags.length > 0 && newTags.length === 0) {
-        changes.push(`Removed all looking for tags`);
-      } else {
-        // Find added and removed tags
-        const added = newTags.filter(
-          (tag: LookingForTag) => !oldTags.includes(tag)
-        );
-        const removed = oldTags.filter(
-          (tag: LookingForTag) => !newTags.includes(tag)
-        );
+    // Generate a meaningful change message about tags
+    if (oldTags.length === 0 && newTags.length > 0) {
+      changes.push(`Added looking for tags: ${newTags.join(', ')}`);
+    } else if (oldTags.length > 0 && newTags.length === 0) {
+      changes.push(`Removed all looking for tags`);
+    } else {
+      // Find added and removed tags
+      const added = newTags.filter(
+        (tag: LookingForTag) => !oldTags.includes(tag)
+      );
+      const removed = oldTags.filter(
+        (tag: LookingForTag) => !newTags.includes(tag)
+      );
 
-        if (added.length > 0) {
-          changes.push(`Added tags: ${added.join(', ')}`);
-        }
-        if (removed.length > 0) {
-          changes.push(`Removed tags: ${removed.join(', ')}`);
-        }
+      if (added.length > 0) {
+        changes.push(`Added tags: ${added.join(', ')}`);
+      }
+      if (removed.length > 0) {
+        changes.push(`Removed tags: ${removed.join(', ')}`);
       }
     }
   }
