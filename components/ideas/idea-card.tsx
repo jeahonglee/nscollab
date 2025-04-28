@@ -10,12 +10,14 @@ import {
 } from '@/components/ui/card';
 import { formatDistanceToNow } from 'date-fns';
 import { getInitials } from '@/lib/utils/string-utils';
+import { SimpleContributionGraph } from '@/components/ui/simple-contribution-graph';
 
 interface IdeaCardProps {
   idea: IdeaWithRelations;
+  contributionData?: Array<{ date: string; count: number }>;
 }
 
-export function IdeaCard({ idea }: IdeaCardProps) {
+export function IdeaCard({ idea, contributionData = [] }: IdeaCardProps) {
   // Format the last activity date
   const lastActivity = formatDistanceToNow(new Date(idea.last_activity_at), {
     addSuffix: true,
@@ -43,6 +45,19 @@ export function IdeaCard({ idea }: IdeaCardProps) {
         <p className="text-sm text-muted-foreground line-clamp-3">
           {idea.description}
         </p>
+        
+        {/* Contribution graph - positioned at bottom for consistency */}
+        {contributionData.length > 0 && (
+          <div className="w-full overflow-hidden mt-3">
+            <SimpleContributionGraph 
+              data={contributionData}
+              size="sm" 
+              showTooltips={false}
+              rightAligned={true}
+              className="justify-end w-full"
+            />
+          </div>
+        )}
 
         {/* {idea.looking_for_tags && idea.looking_for_tags.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-3">

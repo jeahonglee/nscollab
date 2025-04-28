@@ -72,3 +72,98 @@ export async function getIdeaContributions(ideaId: string): Promise<Contribution
 
     return contributionData;
 }
+
+// Get contribution data for all ideas (for the ideas list view)
+export async function getAllIdeasContributions(): Promise<Record<string, ContributionData[]>> {
+    noStore();
+    const supabase = await createClient();
+    
+    // Get comments from the last 90 days for all ideas
+    const ninetyDaysAgo = new Date();
+    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+    
+    const { data, error } = await supabase
+      .from('idea_comments')
+      .select('idea_id, created_at')
+      .gte('created_at', ninetyDaysAgo.toISOString());
+      
+    if (error) {
+      console.error('Error fetching all ideas contributions:', error);
+      return {};
+    }
+    
+    // Group contributions by idea_id
+    const contributionsByIdea: Record<string, {[date: string]: number}> = {};
+    
+    data.forEach(comment => {
+      const { idea_id, created_at } = comment;
+      const date = new Date(created_at).toISOString().split('T')[0];
+      
+      if (!contributionsByIdea[idea_id]) {
+        contributionsByIdea[idea_id] = {};
+      }
+      
+      contributionsByIdea[idea_id][date] = (contributionsByIdea[idea_id][date] || 0) + 1;
+    });
+    
+    // Convert to the expected format
+    const result: Record<string, ContributionData[]> = {};
+    
+    Object.entries(contributionsByIdea).forEach(([ideaId, counts]) => {
+      result[ideaId] = Object.entries(counts).map(([date, count]) => ({
+        date,
+        count,
+      }));
+    });
+    
+    return result;
+}
+
+// Get contribution data for all users (for the people list view)
+export async function getAllUsersContributions(): Promise<Record<string, ContributionData[]>> {
+    noStore();
+    const supabase = await createClient();
+    
+    // Get comments from the last 90 days for all users
+    const ninetyDaysAgo = new Date();
+    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+    
+    const { data, error } = await supabase
+      .from('idea_comments')
+      .select('user_id, created_at')
+      .gte('created_at', ninetyDaysAgo.toISOString());
+      
+    if (error) {
+      console.error('Error fetching all users contributions:', error);
+      return {};
+    }
+    
+    // Group contributions by user_id
+    const contributionsByUser: Record<string, {[date: string]: number}> = {};
+    
+    data.forEach(comment => {
+      const { user_id, created_at } = comment;
+      // Skip null user_ids
+      if (!user_id) return;
+      
+      const date = new Date(created_at).toISOString().split('T')[0];
+      
+      if (!contributionsByUser[user_id]) {
+        contributionsByUser[user_id] = {};
+      }
+      
+      contributionsByUser[user_id][date] = (contributionsByUser[user_id][date] || 0) + 1;
+    });
+    
+    // Convert to the expected format
+    const result: Record<string, ContributionData[]> = {};
+    
+    Object.entries(contributionsByUser).forEach(([userId, counts]) => {
+      result[userId] = Object.entries(counts).map(([date, count]) => ({
+        date,
+        count,
+      }));
+    });
+    
+    return result;
+}

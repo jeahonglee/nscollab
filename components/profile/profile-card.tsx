@@ -16,13 +16,19 @@ import {
   FaInstagram,
 } from 'react-icons/fa';
 import { getInitials } from '@/lib/utils/string-utils';
+import { SimpleContributionGraph } from '@/components/ui/simple-contribution-graph';
 
 interface ProfileCardProps {
   profile: ProfileWithRelations;
   currentUserId: string;
+  contributionData?: Array<{ date: string; count: number }>;
 }
 
-export function ProfileCard({ profile, currentUserId }: ProfileCardProps) {
+export function ProfileCard({
+  profile,
+  currentUserId,
+  contributionData = [],
+}: ProfileCardProps) {
   // Extract Discord ID from avatar URL
   const extractDiscordId = (avatarUrl: string | null) => {
     if (!avatarUrl) return '';
@@ -127,6 +133,19 @@ export function ProfileCard({ profile, currentUserId }: ProfileCardProps) {
                 +{profile.skills.length - 9} more
               </Badge>
             )}
+          </div>
+        )}
+        
+        {/* Contribution graph - moved to bottom of content for consistent positioning */}
+        {contributionData.length > 0 && (
+          <div className="w-full overflow-hidden">
+            <SimpleContributionGraph 
+              data={contributionData}
+              size="sm" 
+              showTooltips={false}
+              rightAligned={true}
+              className="justify-end w-full"
+            />
           </div>
         )}
 

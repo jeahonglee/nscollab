@@ -7,8 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Search } from 'lucide-react';
-// import { AutoSubmitSwitch } from '@/components/filter/auto-submit-switch';
 import { format } from 'date-fns';
+import { getAllUsersContributions } from '@/app/actions/contributionActions';
 
 export default async function PeoplePage({
   searchParams,
@@ -123,6 +123,9 @@ export default async function PeoplePage({
   });
 
   const uniqueTags = Array.from(allTags);
+  
+  // Fetch contribution data for all users
+  const contributionsMap = await getAllUsersContributions();
 
   return (
     <div className="space-y-6">
@@ -196,6 +199,7 @@ export default async function PeoplePage({
             key={profile.id}
             profile={profile as ProfileWithRelations}
             currentUserId={user.id}
+            contributionData={contributionsMap[profile.id] || []}
           />
         ))}
       </div>

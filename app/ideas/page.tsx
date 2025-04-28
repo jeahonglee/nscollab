@@ -7,6 +7,7 @@ import { IdeaCard } from '@/components/ideas/idea-card';
 import { IdeaWithRelations } from '@/lib/supabase/types';
 import { IDEA_STATUSES } from '@/lib/supabase/types';
 import { Plus } from 'lucide-react';
+import { getAllIdeasContributions } from '@/app/actions/contributionActions';
 
 export default async function IdeasPage({
   searchParams,
@@ -62,6 +63,9 @@ export default async function IdeasPage({
 
   // Prepare ideas list (now no grouping needed)
   const ideasList = (ideas as IdeaWithRelations[]) || [];
+  
+  // Fetch contribution data for all ideas
+  const contributionsMap = await getAllIdeasContributions();
 
   return (
     <div className="space-y-6">
@@ -118,7 +122,11 @@ export default async function IdeasPage({
       <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {ideasList.map((idea) => (
-            <IdeaCard key={idea.id} idea={idea} />
+            <IdeaCard 
+              key={idea.id} 
+              idea={idea} 
+              contributionData={contributionsMap[idea.id] || []}
+            />
           ))}
         </div>
 
