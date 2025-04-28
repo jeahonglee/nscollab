@@ -381,7 +381,7 @@ export default async function TimelinePage({
                                 {comment.profile && (
                                   <Link
                                     href={`/profile/${comment.profile.discord_username || comment.profile.id}`}
-                                    className="font-medium hover:underline"
+                                    className="font-medium text-muted-foreground hover:underline"
                                   >
                                     {comment.profile.full_name}
                                   </Link>

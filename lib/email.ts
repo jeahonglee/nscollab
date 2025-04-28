@@ -32,7 +32,7 @@ export async function sendCommentNotificationEmail({
   }
 
   // Construct the URL to the idea page
-  const ideaUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/ideas/${ideaId}`;
+  const ideaUrl = `${process.env.VERCEL_URL || 'https://nscollab.com'}/ideas/${ideaId}`;
 
   // Simple text version of the comment for the email
   const truncatedComment =
