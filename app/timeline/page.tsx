@@ -456,6 +456,18 @@ export default async function TimelinePage({
                 </Link>
 
                 <Link
+                  href="/demoday"
+                  className="block p-3 border rounded-md hover:bg-accent transition-colors"
+                >
+                  <div className="font-medium text-base md:text-lg">
+                    Demoday
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Monthly showcase of ideas and projects
+                  </div>
+                </Link>
+
+                <Link
                   href="/people"
                   className="block p-3 border rounded-md hover:bg-accent transition-colors"
                 >
