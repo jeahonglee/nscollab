@@ -162,6 +162,7 @@ export default function NavBarClient({
     router.prefetch('/timeline');
     router.prefetch('/people');
     router.prefetch('/ideas');
+    router.prefetch('/demoday');
     if (user) {
       router.prefetch('/profile/me');
       router.prefetch('/ideas/new');
@@ -201,17 +202,27 @@ export default function NavBarClient({
                   : 'bg-secondary/80 text-secondary-foreground border-secondary hover:bg-secondary'
               }`}
             >
-              Members
+              People
             </Link>
             <Link
               href="/ideas"
               className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all border ${
-                pathname.startsWith('/ideas')
+                pathname === '/ideas'
                   ? 'bg-primary text-primary-foreground border-primary-foreground shadow-sm'
                   : 'bg-secondary/80 text-secondary-foreground border-secondary hover:bg-secondary'
               }`}
             >
-              Projects
+              Ideas
+            </Link>
+            <Link
+              href="/demoday"
+              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all border ${
+                pathname === '/demoday'
+                  ? 'bg-primary text-primary-foreground border-primary-foreground shadow-sm'
+                  : 'bg-secondary/80 text-secondary-foreground border-secondary hover:bg-secondary'
+              }`}
+            >
+              Demoday
             </Link>
           </nav>
         </div>
