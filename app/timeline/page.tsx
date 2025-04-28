@@ -4,9 +4,11 @@ import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatDistanceToNow, subWeeks, startOfWeek, format } from 'date-fns';
-import { MessageSquare, Lightbulb, Clock, ChevronDown } from 'lucide-react';
+import { MessageSquare, Lightbulb, Clock, ChevronDown, BarChart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import FeedbackBoard from '@/components/FeedbackBoard';
+import { SimpleContributionGraph } from '@/components/ui/simple-contribution-graph';
+import { getAllUsersContributions, getAllIdeasContributions } from '@/app/actions/contributionActions';
 
 export default async function TimelinePage({
   searchParams,
@@ -235,6 +237,33 @@ export default async function TimelinePage({
       new Date(a.comments[0].created_at).getTime()
     );
   });
+  
+  // Fetch contribution data for all users to show overall activity
+  const usersContributionsMap = await getAllUsersContributions();
+  
+  // Fetch contribution data for all ideas
+  const ideasContributionsMap = await getAllIdeasContributions();
+  
+  // Combine all user contributions into one dataset for the activity overview
+  const allContributions: Array<{ date: string; count: number }> = [];
+  const contributionsByDate: Record<string, number> = {};
+  
+  // Aggregate contribution counts by date
+  Object.values(usersContributionsMap).forEach(userContributions => {
+    userContributions.forEach(({ date, count }) => {
+      contributionsByDate[date] = (contributionsByDate[date] || 0) + count;
+    });
+  });
+  
+  // Convert to array format for the graph
+  Object.entries(contributionsByDate).forEach(([date, count]) => {
+    allContributions.push({ date, count });
+  });
+  
+  // Sort by date (ascending)
+  allContributions.sort((a, b) => {
+    return new Date(a.date).getTime() - new Date(b.date).getTime();
+  });
 
   // Helper function to get initials for avatar fallback
   const getInitials = (name: string | null | undefined) => {
@@ -257,6 +286,30 @@ export default async function TimelinePage({
       </div> */}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Activity Overview Card - top row, full width */}
+        <div className="md:col-span-3 mb-2">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center text-xl">
+                <BarChart className="h-5 w-5 mr-2" />
+                Activity Overview
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="w-full overflow-hidden">
+                <SimpleContributionGraph 
+                  data={allContributions}
+                  size="sm"
+                  showTooltips={true}
+                  rightAligned={true}
+                  className="justify-end w-full"
+                  dense={true}
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        
         <div className="md:col-span-2">
           <Card>
             <CardHeader className="pb-6 border-b-2">
@@ -345,6 +398,21 @@ export default async function TimelinePage({
                               {ideaGroup.idea.description.length > 180
                                 ? '...'
                                 : ''}
+                            </div>
+                          )}
+                          
+                          {/* Contribution graph for this specific idea */}
+                          {ideasContributionsMap[ideaGroup.idea.id] && 
+                           ideasContributionsMap[ideaGroup.idea.id].length > 0 && (
+                            <div className="w-full overflow-hidden mt-3">
+                              <SimpleContributionGraph 
+                                data={ideasContributionsMap[ideaGroup.idea.id]}
+                                size="xs"
+                                showTooltips={true}
+                                rightAligned={true}
+                                className="justify-end w-full"
+                                dense={true}
+                              />
                             </div>
                           )}
                         </div>

@@ -52,9 +52,10 @@ export function IdeaCard({ idea, contributionData = [] }: IdeaCardProps) {
             <SimpleContributionGraph 
               data={contributionData}
               size="sm" 
-              showTooltips={false}
+              showTooltips={true}
               rightAligned={true}
               className="justify-end w-full"
+              dense={true}
             />
           </div>
         )}

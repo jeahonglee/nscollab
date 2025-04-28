@@ -9,11 +9,12 @@ interface ContributionData {
 interface SimpleContributionGraphProps {
   data: ContributionData[];
   maxDays?: number; // Maximum number of days to generate (for performance)
-  size?: 'sm' | 'md'; // Size variants
+  size?: 'xs' | 'sm' | 'md' | 'lg'; // Size variants
   colorScheme?: Record<number, string>; // Optional: customize colors
   className?: string; // Additional classes
   showTooltips?: boolean; // Whether to show tooltips
   rightAligned?: boolean; // Whether to align from the right (show most recent)
+  dense?: boolean; // Whether to use denser spacing
 }
 
 // Default color scheme (similar to GitHub)
@@ -51,6 +52,7 @@ export const SimpleContributionGraph: React.FC<SimpleContributionGraphProps> = (
   className = '',
   showTooltips = true,
   rightAligned = true, // Default to right-aligned (show most recent)
+  dense = false, // Default to standard spacing
 }) => {
   // Always generate a reasonable amount of data, container will handle overflow
   const daysToGenerate = maxDays;
@@ -83,20 +85,40 @@ export const SimpleContributionGraph: React.FC<SimpleContributionGraphProps> = (
   const displayDays = daysData;
   
   // Determine box size based on size prop
-  const boxSize = size === 'sm' ? 'w-2 h-2' : 'w-3 h-3';
-  const gap = size === 'sm' ? 'gap-[2px]' : 'gap-[3px]';
+  let boxSize = '';
+  let gap = '';
+  
+  switch(size) {
+    case 'xs':
+      boxSize = 'w-2 h-2';
+      gap = dense ? 'gap-[1px]' : 'gap-[1px]';
+      break;
+    case 'sm':
+      boxSize = 'w-2.5 h-2.5';
+      gap = dense ? 'gap-[1px]' : 'gap-[2px]';
+      break;
+    case 'lg':
+      boxSize = 'w-4 h-4';
+      gap = dense ? 'gap-[2px]' : 'gap-[3px]';
+      break;
+    case 'md':
+    default:
+      boxSize = 'w-3 h-3';
+      gap = dense ? 'gap-[2px]' : 'gap-[2px]';
+      break;
+  }
   
   // Render the simple horizontal graph
   return (
     <TooltipProvider>
-      <div className={`flex ${gap} items-center overflow-hidden ${className}`}>
+      <div className={`flex ${gap} flex-nowrap items-center overflow-hidden ${className}`}>
         {displayDays.map(({ date, count }) => {
           const colorLevel = getColorLevel(count);
           const colorClass = colorScheme[colorLevel];
           
           const cell = (
             <div 
-              className={`${boxSize} rounded-sm ${colorClass}`}
+              className={`${boxSize} rounded-sm ${colorClass} flex-shrink-0`}
               data-date={date}
               data-count={count}
             />
