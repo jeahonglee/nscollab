@@ -11,23 +11,23 @@ import PitchItem from './pitch-item';
 import PitchModal from './pitch-modal';
 import { AlertCircle } from 'lucide-react';
 
-// Placeholder types - replace with actual types later
-interface RawPitchData {
-  id: string;
-  idea_id: string;
-  pitcher_id: string;
-  submitted_at: string;
-  ideas: { id: string; title: string; description: string }[] | null;
-  profiles: { id: string; full_name: string | null; avatar_url: string | null; discord_username: string | null }[] | null;
-}
-
+// Interface matching the exact structure from Supabase
 type Pitch = {
   id: string;
   idea_id: string;
   pitcher_id: string;
-  ideas: { title: string; description: string };
-  profiles: { id: string; full_name: string | null; avatar_url: string | null; discord_username: string | null };
   submitted_at: string;
+  ideas: {
+    id: string;
+    title: string;
+    description: string;
+  };
+  profiles: {
+    id: string;
+    full_name: string | null;
+    avatar_url: string | null;
+    discord_username: string | null;
+  };
 };
 type Idea = { id: string; title: string };
 type DemodayEntry = { id: string; event_date: string };
@@ -143,15 +143,8 @@ export default function DemodayContent({ serverUser }: DemodayContentProps) {
 
       if (pitchError) throw pitchError;
 
-      // Transform data to match Pitch type
-      const transformedPitches: Pitch[] = (pitchData || []).map((p: RawPitchData) => ({
-        ...p,
-        // Safely access the first element or provide defaults
-        ideas: p.ideas?.[0] || { title: 'Unknown Idea', description: '' }, 
-        profiles: p.profiles?.[0] || { id: '', full_name: 'Unknown User', avatar_url: null, discord_username: null }, 
-      }));
-
-      setPitches(transformedPitches);
+      // Use a type assertion since we know the data structure matches our Pitch type
+      setPitches((pitchData || []) as unknown as Pitch[]);
       setError(null);
     } catch (err: unknown) {
        console.error('Full error fetching pitches for month:', JSON.stringify(err, null, 2));
