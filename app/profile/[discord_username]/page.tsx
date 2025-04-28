@@ -17,6 +17,8 @@ import {
 } from 'react-icons/fa';
 import NextLogo from '@/components/ns-logo';
 import { ProfileIdeaCard } from '@/components/profile/profile-idea-card';
+import { ContributionGraph } from '@/components/ui/contribution-graph';
+import { getUserContributions } from '@/app/actions/contributionActions';
 
 export default async function ProfilePage({
   params,
@@ -55,6 +57,9 @@ export default async function ProfilePage({
     console.error('Error fetching profile:', error);
     notFound();
   }
+
+  // Fetch contribution data using the server action
+  const contributionData = await getUserContributions(profile.id);
 
   const profileWithStays = profile as ProfileWithRelations;
 
@@ -190,7 +195,7 @@ export default async function ProfilePage({
 
                 {profileWithStays.x_handle && (
                   <a
-                    href={`https://twitter.com/${profileWithStays.x_handle}`}
+                    href={`https://x.com/${profileWithStays.x_handle}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-foreground hover:text-muted-foreground"
@@ -325,6 +330,12 @@ export default async function ProfilePage({
               </CardContent>
             </Card>
           )}
+
+          {/* Contribution Graph */}
+          <ContributionGraph
+            data={contributionData}
+            title={`${profileWithStays.full_name}'s Comment Activity`}
+          />
 
           {/* Skills Section */}
           {profileWithStays.skills && profileWithStays.skills.length > 0 && (

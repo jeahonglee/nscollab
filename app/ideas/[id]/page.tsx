@@ -11,6 +11,8 @@ import { formatDistanceToNow, format } from 'date-fns';
 import { CommentsList } from '@/components/ideas/comments-list';
 import { TeamMembersList } from '@/components/ideas/team-members-list';
 import { DeleteIdeaButton } from '@/components/ideas/delete-idea-button';
+import { ContributionGraph } from '@/components/ui/contribution-graph';
+import { getIdeaContributions } from '@/app/actions/contributionActions';
 
 export default async function IdeaPage({
   params,
@@ -26,6 +28,8 @@ export default async function IdeaPage({
   if (!user) {
     redirect('/sign-in');
   }
+
+  const { id: ideaId } = await params;
 
   // Fetch idea with submitter profile, team members, and comments
   const { data: idea, error } = await supabase
@@ -50,13 +54,16 @@ export default async function IdeaPage({
       )
     `
     )
-    .eq('id', (await params).id)
+    .eq('id', ideaId)
     .single();
 
   if (error || !idea) {
     console.error('Error fetching idea:', error);
     notFound();
   }
+
+  // Fetch contribution data for this specific idea
+  const contributionData = await getIdeaContributions(ideaId);
 
   const ideaWithRelations = idea as IdeaWithRelations;
 
@@ -177,6 +184,13 @@ export default async function IdeaPage({
         </div>
 
         <div className="space-y-6">
+          {/* Contribution Graph for Idea */}
+          <ContributionGraph
+            data={contributionData}
+            title="Comment Activity"
+            months={3}
+          />
+          
           {/* Creator Info */}
           <Card>
             <CardHeader>
