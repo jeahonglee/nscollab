@@ -9,9 +9,8 @@ interface ContributionData {
 }
 
 // This is a helper type for our database schemas
-type DbClient = ReturnType<typeof createClient> extends Promise<infer T> ? T : never;
-
-
+type DbClient =
+  ReturnType<typeof createClient> extends Promise<infer T> ? T : never;
 
 // Fetch user contributions - accepts a pre-created Supabase client
 async function getUserContributionsData(
@@ -19,7 +18,14 @@ async function getUserContributionsData(
   userId: string
 ): Promise<ContributionData[]> {
   const now = new Date();
-  const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+  const todayEnd = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+    23,
+    59,
+    59
+  );
   const oneYearAgo = new Date(todayEnd);
   oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
 
@@ -37,7 +43,7 @@ async function getUserContributionsData(
 
   // Process data to count comments per day
   const counts: { [date: string]: number } = {};
-  data.forEach(comment => {
+  data.forEach((comment) => {
     const date = new Date(comment.created_at).toISOString().split('T')[0];
     counts[date] = (counts[date] || 0) + 1;
   });
@@ -48,14 +54,20 @@ async function getUserContributionsData(
   }));
 }
 
-
 // Fetch idea contributions - accepts a pre-created Supabase client
 async function getIdeaContributionsData(
   supabase: DbClient,
   ideaId: string
 ): Promise<ContributionData[]> {
   const now = new Date();
-  const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+  const todayEnd = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+    23,
+    59,
+    59
+  );
   const oneYearAgo = new Date(todayEnd);
   oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
 
@@ -73,7 +85,7 @@ async function getIdeaContributionsData(
 
   // Process data to count comments per day
   const counts: { [date: string]: number } = {};
-  data.forEach(comment => {
+  data.forEach((comment) => {
     const date = new Date(comment.created_at).toISOString().split('T')[0];
     counts[date] = (counts[date] || 0) + 1;
   });
@@ -89,45 +101,53 @@ async function getAllIdeasContributionsData(
   supabase: DbClient
 ): Promise<Record<string, ContributionData[]>> {
   const now = new Date();
-  const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+  const todayEnd = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+    23,
+    59,
+    59
+  );
   const ninetyDaysAgo = new Date(todayEnd);
   ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
-  
+
   const { data, error } = await supabase
     .from('idea_comments')
     .select('idea_id, created_at')
     .gte('created_at', ninetyDaysAgo.toISOString())
     .lte('created_at', todayEnd.toISOString());
-    
+
   if (error) {
     console.error('Error fetching all ideas contributions:', error);
     return {};
   }
-  
+
   // Group contributions by idea_id
-  const contributionsByIdea: Record<string, {[date: string]: number}> = {};
-  
-  data.forEach(comment => {
+  const contributionsByIdea: Record<string, { [date: string]: number }> = {};
+
+  data.forEach((comment) => {
     const { idea_id, created_at } = comment;
     const date = new Date(created_at).toISOString().split('T')[0];
-    
+
     if (!contributionsByIdea[idea_id]) {
       contributionsByIdea[idea_id] = {};
     }
-    
-    contributionsByIdea[idea_id][date] = (contributionsByIdea[idea_id][date] || 0) + 1;
+
+    contributionsByIdea[idea_id][date] =
+      (contributionsByIdea[idea_id][date] || 0) + 1;
   });
-  
+
   // Convert to the expected format
   const result: Record<string, ContributionData[]> = {};
-  
+
   Object.entries(contributionsByIdea).forEach(([ideaId, counts]) => {
     result[ideaId] = Object.entries(counts).map(([date, count]) => ({
       date,
       count,
     }));
   });
-  
+
   return result;
 }
 
@@ -136,57 +156,67 @@ async function getAllUsersContributionsData(
   supabase: DbClient
 ): Promise<Record<string, ContributionData[]>> {
   const now = new Date();
-  const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+  const todayEnd = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+    23,
+    59,
+    59
+  );
   const ninetyDaysAgo = new Date(todayEnd);
   ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
-  
+
   const { data, error } = await supabase
     .from('idea_comments')
     .select('user_id, created_at')
     .gte('created_at', ninetyDaysAgo.toISOString())
     .lte('created_at', todayEnd.toISOString());
-    
+
   if (error) {
     console.error('Error fetching all users contributions:', error);
     return {};
   }
-  
+
   // Group contributions by user_id
-  const contributionsByUser: Record<string, {[date: string]: number}> = {};
-  
-  data.forEach(comment => {
+  const contributionsByUser: Record<string, { [date: string]: number }> = {};
+
+  data.forEach((comment) => {
     const { user_id, created_at } = comment;
     // Skip null user_ids
     if (!user_id) return;
-    
+
     const date = new Date(created_at).toISOString().split('T')[0];
-    
+
     if (!contributionsByUser[user_id]) {
       contributionsByUser[user_id] = {};
     }
-    
-    contributionsByUser[user_id][date] = (contributionsByUser[user_id][date] || 0) + 1;
+
+    contributionsByUser[user_id][date] =
+      (contributionsByUser[user_id][date] || 0) + 1;
   });
-  
+
   // Convert to the expected format
   const result: Record<string, ContributionData[]> = {};
-  
+
   Object.entries(contributionsByUser).forEach(([userId, counts]) => {
     result[userId] = Object.entries(counts).map(([date, count]) => ({
       date,
       count,
     }));
   });
-  
+
   return result;
 }
 
 // These are the exported functions that will be used by components
 
 // Get user contributions with proper caching
-export async function getUserContributions(userId: string): Promise<ContributionData[]> {
+export async function getUserContributions(
+  userId: string
+): Promise<ContributionData[]> {
   const supabase = await createClient(); // Create Supabase client OUTSIDE cache
-  
+
   return cache(
     async (id: string) => {
       // In this cache function, we DON'T create a Supabase client
@@ -200,9 +230,11 @@ export async function getUserContributions(userId: string): Promise<Contribution
 }
 
 // Get idea contributions with proper caching
-export async function getIdeaContributions(ideaId: string): Promise<ContributionData[]> {
+export async function getIdeaContributions(
+  ideaId: string
+): Promise<ContributionData[]> {
   const supabase = await createClient(); // Create Supabase client OUTSIDE cache
-  
+
   return cache(
     async (id: string) => {
       const cachedData = await getIdeaContributionsData(supabase, id);
@@ -214,9 +246,11 @@ export async function getIdeaContributions(ideaId: string): Promise<Contribution
 }
 
 // Get all ideas contributions with proper caching
-export async function getAllIdeasContributions(): Promise<Record<string, ContributionData[]>> {
+export async function getAllIdeasContributions(): Promise<
+  Record<string, ContributionData[]>
+> {
   const supabase = await createClient(); // Create Supabase client OUTSIDE cache
-  
+
   return cache(
     async () => {
       const cachedData = await getAllIdeasContributionsData(supabase);
@@ -228,9 +262,11 @@ export async function getAllIdeasContributions(): Promise<Record<string, Contrib
 }
 
 // Get all users contributions with proper caching
-export async function getAllUsersContributions(): Promise<Record<string, ContributionData[]>> {
+export async function getAllUsersContributions(): Promise<
+  Record<string, ContributionData[]>
+> {
   const supabase = await createClient(); // Create Supabase client OUTSIDE cache
-  
+
   return cache(
     async () => {
       const cachedData = await getAllUsersContributionsData(supabase);

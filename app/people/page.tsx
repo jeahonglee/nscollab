@@ -9,38 +9,18 @@ import { Badge } from '@/components/ui/badge';
 import { Search } from 'lucide-react';
 import { format } from 'date-fns';
 import { getAllUsersContributions } from '@/app/actions/contributionActions';
-import { cache } from 'react';
-
-// Create a cached function to fetch profiles with optional tag filtering
-const getProfiles = cache(async (tag: string) => {
-  const supabase = await createClient();
-  
-  // Build the query with nested relation data
-  let query = supabase.from('profiles').select(`
-      *,
-      ns_stays (*)
-    `);
-
-  // Only apply tag filter at DB level
-  if (tag) {
-    query = query.contains('status_tags', [tag]);
-  }
-
-  // Execute query to get profiles
-  const { data: profiles, error } = await query;
-
-  // Handle any errors
-  if (error) {
-    console.error('Error fetching profiles:', error);
-    return [];
-  }
-
-  return profiles;
-});
+import { getProfilesWithCache } from '@/lib/cache/queries';
 
 // Define a profile type that includes the fields we need
 type ProfileWithStays = ProfileWithRelations & {
-  ns_stays?: Array<{ start_month?: string }>
+  ns_stays?: Array<{
+    id: string;
+    profile_id: string;
+    active_months?: string[] | null;
+    start_month?: string | null;
+    created_at: string;
+    updated_at?: string | null;
+  }>;
 };
 
 // Function to filter profiles by current NS status
@@ -60,7 +40,7 @@ function filterByCurrentNsStatus(profiles: ProfileWithStays[]) {
     }
 
     // Check if any of the stays match the current month
-    return profile.ns_stays.some((stay: { start_month?: string }) => {
+    return profile.ns_stays.some((stay) => {
       // Each stay has a start_month in YYYY-MM-DD format (e.g., 2025-04-01)
       if (!stay.start_month || typeof stay.start_month !== 'string') {
         return false;
@@ -76,7 +56,7 @@ function filterByCurrentNsStatus(profiles: ProfileWithStays[]) {
 // Function to filter profiles by search term
 function filterBySearchTerm(profiles: ProfileWithStays[], searchTerm: string) {
   if (!searchTerm) return profiles;
-  
+
   const searchLower = searchTerm.toLowerCase();
 
   return profiles.filter((profile) => {
@@ -125,7 +105,7 @@ export default async function PeoplePage({
   const currentNsOnly = (await searchParams).current_ns === 'true';
 
   // Get all profiles with the tag filter applied at DB level (cached)
-  const allProfiles = await getProfiles(tag);
+  const allProfiles = await getProfilesWithCache(tag);
 
   // Apply client-side filtering
   let filteredProfiles = allProfiles;
@@ -149,7 +129,7 @@ export default async function PeoplePage({
   });
 
   const uniqueTags = Array.from(allTags);
-  
+
   // Fetch contribution data for all users (already cached in contributionActions.ts)
   const contributionsMap = await getAllUsersContributions();
 

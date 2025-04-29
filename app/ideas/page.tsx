@@ -4,53 +4,10 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { IdeaCard } from '@/components/ideas/idea-card';
-import { IdeaWithRelations } from '@/lib/supabase/types';
 import { IDEA_STATUSES } from '@/lib/supabase/types';
 import { Plus } from 'lucide-react';
 import { getAllIdeasContributions } from '@/app/actions/contributionActions';
-import { cache } from 'react';
-
-// Create a cached version of the ideas fetch to avoid redundant calls
-const getIdeas = cache(async (statusFilter: string) => {
-  const supabase = await createClient();
-  
-  // Build query
-  let query = supabase
-    .from('ideas')
-    .select(
-      `
-      *,
-      profile: profiles!ideas_submitter_user_id_fkey (
-        id, full_name, avatar_url
-      ),
-      members: idea_members (
-        id, user_id, role,
-        profile: profiles (
-          id, full_name, avatar_url
-        )
-      )
-    `
-    )
-    .eq('is_archived', false);
-
-  // Apply status filter if present
-  if (statusFilter) {
-    query = query.eq('status', statusFilter);
-  }
-
-  // Always sort by most recent activity
-  query = query.order('last_activity_at', { ascending: false });
-
-  // Execute query
-  const { data: ideas, error } = await query;
-
-  if (error) {
-    console.error('Error fetching ideas:', error);
-    return [];
-  }
-
-  return ideas as IdeaWithRelations[];
-});
+import { getIdeasWithCache } from '@/lib/cache/queries';
 
 export default async function IdeasPage({
   searchParams,
@@ -71,8 +28,8 @@ export default async function IdeasPage({
   const statusFilter = (await searchParams).status || '';
 
   // Get ideas with caching
-  const ideasList = await getIdeas(statusFilter);
-  
+  const ideasList = await getIdeasWithCache(statusFilter);
+
   // Fetch contribution data for all ideas (this is already cached in the updated contributionActions.ts)
   const contributionsMap = await getAllIdeasContributions();
 
@@ -131,9 +88,9 @@ export default async function IdeasPage({
       <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {ideasList.map((idea) => (
-            <IdeaCard 
-              key={idea.id} 
-              idea={idea} 
+            <IdeaCard
+              key={idea.id}
+              idea={idea}
               contributionData={contributionsMap[idea.id] || []}
             />
           ))}

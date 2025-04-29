@@ -9,6 +9,10 @@ import { Button } from '@/components/ui/button';
 import FeedbackBoard from '@/components/FeedbackBoard';
 import { SimpleContributionGraph } from '@/components/ui/simple-contribution-graph';
 import { getAllIdeasContributions } from '@/app/actions/contributionActions';
+import {
+  getRecentCommentsWithCache,
+  getFeedbacksWithCache,
+} from '@/lib/cache/queries';
 
 export default async function TimelinePage({
   searchParams,
@@ -34,83 +38,11 @@ export default async function TimelinePage({
   const startDate = startOfWeek(subWeeks(today, weeksToLoad));
   const startDateString = startDate.toISOString();
 
-  // Fetch feedbacks
-  const { data: rawFeedbacks, error: feedbacksError } = await supabase
-    .from('feedbacks')
-    .select(
-      `
-      id,
-      message,
-      user_id,
-      created_at,
-      profile: profiles (id, full_name, avatar_url)
-    `
-    )
-    .order('created_at', { ascending: false })
-    .limit(50);
+  // Fetch comments from the last X weeks with related data using the cached function
+  const recentComments = await getRecentCommentsWithCache(startDateString);
 
-  if (feedbacksError) {
-    console.error('Error fetching feedbacks:', feedbacksError);
-  }
-
-  // Process the feedbacks to handle nested profile data correctly
-  const feedbacks = (rawFeedbacks || []).map((feedback) => {
-    const rawFeedback = feedback as Record<string, unknown>;
-
-    // Extract profile (might be an array or object)
-    let profile = null;
-    if (rawFeedback.profile) {
-      if (
-        Array.isArray(rawFeedback.profile) &&
-        rawFeedback.profile.length > 0
-      ) {
-        profile = rawFeedback.profile[0];
-      } else {
-        profile = rawFeedback.profile;
-      }
-    }
-
-    return {
-      id: rawFeedback.id as string,
-      message: rawFeedback.message as string,
-      user_id: rawFeedback.user_id as string,
-      created_at: rawFeedback.created_at as string,
-      profile: profile as {
-        id: string;
-        full_name: string | null;
-        avatar_url: string | null;
-      } | null,
-    };
-  });
-
-  // Fetch comments from the last X weeks with related data
-  const { data: recentComments, error } = await supabase
-    .from('idea_comments')
-    .select(
-      `
-      id,
-      idea_id,
-      user_id,
-      comment_text,
-      created_at,
-      profile: profiles (
-        id, full_name, avatar_url, discord_username
-      ),
-      idea: ideas (
-        id, title, status, description, created_at, submitter_user_id,
-        profile: profiles!ideas_submitter_user_id_fkey (
-          id, full_name, avatar_url, discord_username
-        )
-      )
-    `
-    )
-    .gte('created_at', startDateString)
-    .order('created_at', { ascending: false })
-    .limit(100);
-
-  if (error) {
-    console.error('Error fetching recent comments:', error);
-  }
+  // Fetch feedbacks using the cached function
+  const feedbacks = await getFeedbacksWithCache();
 
   // Define the processed comment type
   type ProcessedComment = {
@@ -237,8 +169,8 @@ export default async function TimelinePage({
       new Date(a.comments[0].created_at).getTime()
     );
   });
-  
-  // Fetch contribution data only for the ideas we need
+
+  // Fetch contribution data only for the ideas we need - already cached
   const ideasContributionsMap = await getAllIdeasContributions();
 
   // Helper function to get initials for avatar fallback
@@ -352,21 +284,24 @@ export default async function TimelinePage({
                                 : ''}
                             </div>
                           )}
-                          
+
                           {/* Contribution graph for this specific idea */}
-                          {ideasContributionsMap[ideaGroup.idea.id] && 
-                           ideasContributionsMap[ideaGroup.idea.id].length > 0 && (
-                            <div className="w-full overflow-hidden mt-3">
-                              <SimpleContributionGraph 
-                                data={ideasContributionsMap[ideaGroup.idea.id]}
-                                size="xs"
-                                showTooltips={true}
-                                rightAligned={true}
-                                className="justify-end w-full"
-                                dense={true}
-                              />
-                            </div>
-                          )}
+                          {ideasContributionsMap[ideaGroup.idea.id] &&
+                            ideasContributionsMap[ideaGroup.idea.id].length >
+                              0 && (
+                              <div className="w-full overflow-hidden mt-3">
+                                <SimpleContributionGraph
+                                  data={
+                                    ideasContributionsMap[ideaGroup.idea.id]
+                                  }
+                                  size="xs"
+                                  showTooltips={true}
+                                  rightAligned={true}
+                                  className="justify-end w-full"
+                                  dense={true}
+                                />
+                              </div>
+                            )}
                         </div>
                       </div>
                     )}
