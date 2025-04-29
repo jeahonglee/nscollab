@@ -8,25 +8,12 @@ import { IdeaWithRelations } from '@/lib/supabase/types';
 import { IDEA_STATUSES } from '@/lib/supabase/types';
 import { Plus } from 'lucide-react';
 import { getAllIdeasContributions } from '@/app/actions/contributionActions';
+import { cache } from 'react';
 
-export default async function IdeasPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ status?: string }>;
-}) {
+// Create a cached version of the ideas fetch to avoid redundant calls
+const getIdeas = cache(async (statusFilter: string) => {
   const supabase = await createClient();
-
-  // Check if user is authenticated
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    redirect('/sign-in');
-  }
-
-  // Get filter parameter
-  const statusFilter = (await searchParams).status || '';
-
+  
   // Build query
   let query = supabase
     .from('ideas')
@@ -59,12 +46,34 @@ export default async function IdeasPage({
 
   if (error) {
     console.error('Error fetching ideas:', error);
+    return [];
   }
 
-  // Prepare ideas list (now no grouping needed)
-  const ideasList = (ideas as IdeaWithRelations[]) || [];
+  return ideas as IdeaWithRelations[];
+});
+
+export default async function IdeasPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ status?: string }>;
+}) {
+  const supabase = await createClient();
+
+  // Check if user is authenticated
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    redirect('/sign-in');
+  }
+
+  // Get filter parameter
+  const statusFilter = (await searchParams).status || '';
+
+  // Get ideas with caching
+  const ideasList = await getIdeas(statusFilter);
   
-  // Fetch contribution data for all ideas
+  // Fetch contribution data for all ideas (this is already cached in the updated contributionActions.ts)
   const contributionsMap = await getAllIdeasContributions();
 
   return (

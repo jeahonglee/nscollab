@@ -9,6 +9,100 @@ import { Badge } from '@/components/ui/badge';
 import { Search } from 'lucide-react';
 import { format } from 'date-fns';
 import { getAllUsersContributions } from '@/app/actions/contributionActions';
+import { cache } from 'react';
+
+// Create a cached function to fetch profiles with optional tag filtering
+const getProfiles = cache(async (tag: string) => {
+  const supabase = await createClient();
+  
+  // Build the query with nested relation data
+  let query = supabase.from('profiles').select(`
+      *,
+      ns_stays (*)
+    `);
+
+  // Only apply tag filter at DB level
+  if (tag) {
+    query = query.contains('status_tags', [tag]);
+  }
+
+  // Execute query to get profiles
+  const { data: profiles, error } = await query;
+
+  // Handle any errors
+  if (error) {
+    console.error('Error fetching profiles:', error);
+    return [];
+  }
+
+  return profiles;
+});
+
+// Define a profile type that includes the fields we need
+type ProfileWithStays = ProfileWithRelations & {
+  ns_stays?: Array<{ start_month?: string }>
+};
+
+// Function to filter profiles by current NS status
+function filterByCurrentNsStatus(profiles: ProfileWithStays[]) {
+  // Get current year and month in YYYY-MM format for string comparison
+  const now = new Date();
+  const currentYearMonth = format(now, 'yyyy-MM');
+
+  return profiles.filter((profile) => {
+    // Make sure profile has ns_stays and it's an array
+    if (
+      !profile.ns_stays ||
+      !Array.isArray(profile.ns_stays) ||
+      profile.ns_stays.length === 0
+    ) {
+      return false;
+    }
+
+    // Check if any of the stays match the current month
+    return profile.ns_stays.some((stay: { start_month?: string }) => {
+      // Each stay has a start_month in YYYY-MM-DD format (e.g., 2025-04-01)
+      if (!stay.start_month || typeof stay.start_month !== 'string') {
+        return false;
+      }
+
+      // Simple string comparison using just the YYYY-MM part of the date
+      const stayYearMonth = stay.start_month.substring(0, 7);
+      return stayYearMonth === currentYearMonth;
+    });
+  });
+}
+
+// Function to filter profiles by search term
+function filterBySearchTerm(profiles: ProfileWithStays[], searchTerm: string) {
+  if (!searchTerm) return profiles;
+  
+  const searchLower = searchTerm.toLowerCase();
+
+  return profiles.filter((profile) => {
+    // Search in name
+    if (
+      profile.full_name &&
+      profile.full_name.toLowerCase().includes(searchLower)
+    ) {
+      return true;
+    }
+
+    // Search in bio
+    if (profile.bio && profile.bio.toLowerCase().includes(searchLower)) {
+      return true;
+    }
+
+    // Search in skills (if they exist)
+    if (profile.skills && Array.isArray(profile.skills)) {
+      return profile.skills.some((skill: string) => {
+        return skill.toLowerCase().includes(searchLower);
+      });
+    }
+
+    return false;
+  });
+}
 
 export default async function PeoplePage({
   searchParams,
@@ -30,93 +124,25 @@ export default async function PeoplePage({
   const tag = (await searchParams).tag || '';
   const currentNsOnly = (await searchParams).current_ns === 'true';
 
-  // We need to fetch ALL profiles first and then filter
-  // If we have a tag filter, we can apply that at the database level
-  let query = supabase.from('profiles').select(`
-      *,
-      ns_stays (*)
-    `);
+  // Get all profiles with the tag filter applied at DB level (cached)
+  const allProfiles = await getProfiles(tag);
 
-  // Only apply tag filter at DB level - we'll handle search filtering in-memory
-  if (tag) {
-    query = query.contains('status_tags', [tag]);
-  }
-
-  // Execute query to get all profiles (or filtered by tag if specified)
-  const { data: allProfiles, error } = await query;
-
-  // Handle any errors
-  if (error) {
-    console.error('Error fetching profiles:', error);
-  }
-
-  // Filter profiles based on search criteria and current NS status
+  // Apply client-side filtering
   let filteredProfiles = allProfiles;
 
-  // If current_ns filter is active, only show people with active NS stays in the current month
+  // Apply current NS filter if needed
   if (currentNsOnly && filteredProfiles && filteredProfiles.length > 0) {
-    // Get current year and month in YYYY-MM format for string comparison
-    const now = new Date();
-    const currentYearMonth = format(now, 'yyyy-MM');
-
-    filteredProfiles = filteredProfiles.filter((profile) => {
-      // Make sure profile has ns_stays and it's an array
-      if (
-        !profile.ns_stays ||
-        !Array.isArray(profile.ns_stays) ||
-        profile.ns_stays.length === 0
-      ) {
-        return false;
-      }
-
-      // Check if any of the stays match the current month
-      return profile.ns_stays.some((stay: { start_month?: string }) => {
-        // Each stay has a start_month in YYYY-MM-DD format (e.g., 2025-04-01)
-        if (!stay.start_month || typeof stay.start_month !== 'string') {
-          return false;
-        }
-
-        // Simple string comparison using just the YYYY-MM part of the date
-        // This avoids any issues with timezone or date parsing
-        const stayYearMonth = stay.start_month.substring(0, 7);
-        return stayYearMonth === currentYearMonth;
-      });
-    });
+    filteredProfiles = filterByCurrentNsStatus(filteredProfiles);
   }
 
-  // If search term provided, filter profiles in memory to handle skills properly
-  if (search && allProfiles && allProfiles.length > 0) {
-    const searchLower = search.toLowerCase();
-
-    filteredProfiles = allProfiles.filter((profile) => {
-      // Search in name
-      if (
-        profile.full_name &&
-        profile.full_name.toLowerCase().includes(searchLower)
-      ) {
-        return true;
-      }
-
-      // Search in bio
-      if (profile.bio && profile.bio.toLowerCase().includes(searchLower)) {
-        return true;
-      }
-
-      // Search in skills (if they exist)
-      if (profile.skills && Array.isArray(profile.skills)) {
-        // Check each skill for the search term
-        return profile.skills.some((skill: string) => {
-          return skill.toLowerCase().includes(searchLower);
-        });
-      }
-
-      return false;
-    });
+  // Apply search filter if needed
+  if (search && filteredProfiles && filteredProfiles.length > 0) {
+    filteredProfiles = filterBySearchTerm(filteredProfiles, search);
   }
 
   // Get unique status tags from all profiles for filtering
   const allTags = new Set<string>();
-  filteredProfiles?.forEach((profile) => {
+  allProfiles?.forEach((profile) => {
     if (profile.status_tags) {
       profile.status_tags.forEach((tag: string) => allTags.add(tag));
     }
@@ -124,7 +150,7 @@ export default async function PeoplePage({
 
   const uniqueTags = Array.from(allTags);
   
-  // Fetch contribution data for all users
+  // Fetch contribution data for all users (already cached in contributionActions.ts)
   const contributionsMap = await getAllUsersContributions();
 
   return (
