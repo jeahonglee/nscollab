@@ -21,6 +21,7 @@
     "@radix-ui/react-tooltip": "^1.2.4",
     "@supabase/ssr": "latest",
     "@supabase/supabase-js": "^2.49.4",
+    "@types/react-syntax-highlighter": "^15.5.13",
     "autoprefixer": "10.4.20",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
@@ -33,6 +34,7 @@
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "react-icons": "^5.5.0",
+    "react-syntax-highlighter": "^15.6.1",
     "resend": "^4.4.1"
   },
   "devDependencies": {
