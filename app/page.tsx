@@ -19,7 +19,7 @@ export default async function Home() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // If authenticated, redirect to dashboard
+  // If authenticated, redirect to timeline
   if (user) {
     redirect('/timeline');
   }

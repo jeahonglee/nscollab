@@ -15,6 +15,7 @@ export default function WhitelistChecker() {
     setError(null);
 
     try {
+      // Use absolute path to ensure we're hitting the correct API endpoint
       const response = await fetch(
         `/api/whitelist?username=${encodeURIComponent(username.trim())}`,
         {

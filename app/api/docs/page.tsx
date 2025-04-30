@@ -170,7 +170,7 @@ if ($response) {\n    $data = json_decode($response, true);\n    echo ($data && 
         </h2>
         <p className="text-gray-800 dark:text-gray-200">
           The API is rate-limited to 1000 requests per 5 minutes per IP address.
-          If you exceed this limit, you'll receive a 429 status code.
+          If you exceed this limit, you&apos;ll receive a 429 status code.
         </p>
       </div>
 

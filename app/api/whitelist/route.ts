@@ -42,6 +42,25 @@ export async function GET(request: Request) {
     // Get username from query parameters
     const { searchParams } = new URL(request.url);
     const username = searchParams.get('username');
+    const debug = searchParams.get('debug') === 'true';
+
+    // Debug mode - list all whitelist entries
+    if (debug) {
+      const supabase = await createClient();
+      const { data, error } = await supabase
+        .from('discord_whitelist')
+        .select('username');
+
+      if (error) {
+        console.error('Error fetching whitelist:', error);
+        return NextResponse.json(
+          { error: 'Failed to fetch whitelist' },
+          { status: 500 }
+        );
+      }
+
+      return NextResponse.json({ entries: data });
+    }
 
     // Validate input
     if (!username) {
@@ -80,30 +99,19 @@ export async function GET(request: Request) {
     // Create Supabase client
     const supabase = await createClient();
 
-    // Query the discord_whitelist table
-    const { error } = await supabase
+    // Query the discord_whitelist table (case insensitive)
+    const { data, error } = await supabase
       .from('discord_whitelist')
       .select('username')
-      .eq('username', sanitizedUsername)
-      .single();
+      .ilike('username', sanitizedUsername)
+      .limit(1);
+
+    console.log('Whitelist check for:', sanitizedUsername);
+    console.log('Data:', data);
+    console.log('Error:', error);
 
     if (error) {
-      // If the error is PGRST116 (not found), return false for "not whitelisted"
-      if (error.code === 'PGRST116') {
-        return NextResponse.json(
-          { whitelisted: false },
-          {
-            headers: {
-              'Content-Type': 'application/json',
-              'X-Content-Type-Options': 'nosniff',
-              'X-Frame-Options': 'DENY',
-            },
-          }
-        );
-      }
-
-      // For other errors, return error status
-      console.error('Error checking whitelist:', error);
+      console.error('Database error:', error);
       return NextResponse.json(
         { error: 'Failed to check whitelist' },
         {
@@ -117,9 +125,15 @@ export async function GET(request: Request) {
       );
     }
 
-    // Return result
+    // User is whitelisted if we found at least one matching record
+    const isWhitelisted = data && data.length > 0;
+    console.log(
+      `User ${isWhitelisted ? 'is' : 'is not'} whitelisted:`,
+      sanitizedUsername
+    );
+
     return NextResponse.json(
-      { whitelisted: true },
+      { whitelisted: isWhitelisted },
       {
         headers: {
           'Content-Type': 'application/json',
@@ -146,7 +160,6 @@ export async function GET(request: Request) {
 
 // Helper function to check and increment request count
 function getRequestCount(key: string): number {
-  const now = Date.now();
   const currentCount = requestCache.get(key) || 0;
   requestCache.set(key, currentCount + 1);
   return currentCount + 1;
@@ -160,9 +173,10 @@ function isValidUsername(username: string): boolean {
     return false;
   }
 
-  // Check for valid characters (letters, numbers, and some special chars)
-  // This is a basic check - Discord's actual rules may be more complex
-  const validRegex = /^[a-zA-Z0-9_\.]+$/;
+  // Check for valid characters in modern Discord usernames
+  // Discord usernames can now include letters, numbers, underscores, periods, and hyphens
+  // Note: This is an updated regex pattern that matches current Discord username format
+  const validRegex = /^[a-zA-Z0-9_\.-]+$/;
   return validRegex.test(username);
 }
 

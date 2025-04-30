@@ -44,6 +44,7 @@ export const updateSession = async (request: NextRequest) => {
       request.nextUrl.pathname.startsWith('/timeline') ||
       request.nextUrl.pathname.startsWith('/ideas') ||
       request.nextUrl.pathname.startsWith('/profile') ||
+      request.nextUrl.pathname.startsWith('/demoday') ||
       request.nextUrl.pathname.startsWith('/people');
 
     // If user is not authenticated and trying to access protected route, redirect to sign-in
