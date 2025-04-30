@@ -44,12 +44,12 @@ export default function AngelRegistration({
     try {
       console.log('Attempting to register as angel for demoday:', demoday.id);
 
-      // Try using the RPC function with the correct parameter names (d_id and u_id)
+      // Try using the RPC function with the correct parameter names
       const { data: rpcData, error: rpcError } = await supabase.rpc(
         'register_as_angel',
         {
-          d_id: demoday.id,
-          u_id: user.id,
+          p_demoday_id: demoday.id,
+          p_user_id: user.id,
         }
       );
 

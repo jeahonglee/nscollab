@@ -227,15 +227,15 @@ BEGIN
   DROP TABLE IF EXISTS temp_investor_rankings;
   CREATE TEMP TABLE temp_investor_rankings AS
   SELECT 
-    DENSE_RANK() OVER (ORDER BY (ub.remaining_balance + COALESCE(ir.total_returns - ir.total_invested, 0)) DESC) AS rank,
+    DENSE_RANK() OVER (ORDER BY (ub.remaining_balance + COALESCE(ir.total_returns, 0)) DESC) AS rank,
     ub.user_id AS investor_id,
     p.full_name AS investor_name,
     p.avatar_url AS investor_avatar,
     p.discord_username AS investor_username,
     ub.initial_balance,
     (ub.initial_balance - ub.remaining_balance) AS invested_amount,
-    COALESCE(ir.total_returns - ir.total_invested, 0) AS returns,
-    ub.remaining_balance + COALESCE(ir.total_returns - ir.total_invested, 0) AS final_balance
+    COALESCE(ir.total_returns, 0) AS returns,
+    ub.remaining_balance + COALESCE(ir.total_returns, 0) AS final_balance
   FROM public.user_balances ub
   JOIN public.profiles p ON ub.user_id = p.id
   LEFT JOIN temp_investor_returns ir ON ub.user_id = ir.investor_id

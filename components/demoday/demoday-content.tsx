@@ -688,6 +688,29 @@ export default function DemodayContent({ serverUser }: DemodayContentProps) {
       isSameMonth(parseISO(selectedMonth), now)
     : false;
 
+  // Render list of pitches with proper props based on status
+  const renderPitchList = (isEditable: boolean) => {
+    if (pitches.length === 0) {
+      return (
+        <p className="text-center text-muted-foreground py-6">
+          No pitches submitted for {formatMonthForDisplay(selectedMonth)} yet.
+        </p>
+      );
+    }
+
+    return pitches.map((pitch, index) => (
+      <PitchItem
+        key={pitch.id}
+        pitch={pitch}
+        index={index}
+        currentUser={user}
+        onCancel={handlePitchCancel}
+        isCancelling={cancellingPitchId === pitch.id}
+        isEditable={isEditable}
+      />
+    ));
+  };
+
   // Determine what section to show based on demoday status
   const renderDemodayContent = () => {
     if (!selectedDemoday) return null;
@@ -709,29 +732,6 @@ export default function DemodayContent({ serverUser }: DemodayContentProps) {
         onEditDetails={() => setIsDetailsModalOpen(true)}
       />
     );
-
-    // Render list of pitches with proper props based on status
-    const renderPitchList = (isEditable: boolean) => {
-      if (pitches.length === 0) {
-        return (
-          <p className="text-center text-muted-foreground py-6">
-            No pitches submitted for {formatMonthForDisplay(selectedMonth)} yet.
-          </p>
-        );
-      }
-
-      return pitches.map((pitch, index) => (
-        <PitchItem
-          key={pitch.id}
-          pitch={pitch}
-          index={index}
-          currentUser={user}
-          onCancel={handlePitchCancel}
-          isCancelling={cancellingPitchId === pitch.id}
-          isEditable={isEditable}
-        />
-      ));
-    };
 
     switch (currentStatus) {
       case 'upcoming':
@@ -760,10 +760,6 @@ export default function DemodayContent({ serverUser }: DemodayContentProps) {
         return (
           <div className="space-y-6">
             {detailsSection}
-
-            <div className="space-y-4">
-              {renderPitchList(false)} {/* No editing during pitching phase */}
-            </div>
 
             {/* Show funding interface directly in pitching phase */}
             {user && (
