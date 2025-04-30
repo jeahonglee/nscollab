@@ -589,8 +589,8 @@ export default function DemodayContent({ serverUser }: DemodayContentProps) {
     try {
       console.log('Calculating results for demoday:', selectedDemoday.id);
 
-      // Call the calculate_demoday_results function (from 0039 migration)
-      const { data: calculationSuccess, error } = await supabase.rpc(
+      // Call the simplified calculate_demoday_results function
+      const { data: results, error } = await supabase.rpc(
         'calculate_demoday_results',
         {
           p_demoday_id: selectedDemoday.id,
@@ -598,52 +598,15 @@ export default function DemodayContent({ serverUser }: DemodayContentProps) {
       );
 
       console.log('Calculation function result:', {
-        calculationSuccess,
+        results,
         error,
       });
 
       if (error) {
-        // Handle RPC call errors (network, function not found, etc.)
+        // Handle RPC call errors
         console.error('RPC call failed:', error);
         throw new Error(`RPC Error: ${error.message}`);
       }
-
-      if (calculationSuccess === false) {
-        // The function ran but returned false, indicating an internal issue (likely INSERT failed)
-        console.warn(
-          'Calculation function reported failure (returned false). Trying force_calculate_demoday_results as fallback...'
-        );
-
-        // Try using the force_calculate_demoday_results function which bypasses RLS entirely
-        const { data: forceData, error: forceError } = await supabase.rpc(
-          'force_calculate_demoday_results',
-          { p_demoday_id: selectedDemoday.id }
-        );
-
-        if (forceError) {
-          console.error('Force calculate also failed:', forceError);
-
-          // Last resort: try the older force_complete_demoday if it exists
-          const { data: legacyForceData, error: legacyForceError } =
-            await supabase.rpc('force_complete_demoday', {
-              demo_id: selectedDemoday.id,
-            });
-
-          if (legacyForceError) {
-            console.error('All calculation methods failed:', legacyForceError);
-            throw new Error(
-              `All calculation methods failed: ${legacyForceError.message}`
-            );
-          }
-
-          console.log('Legacy force complete fallback succeeded.');
-        } else {
-          console.log('Force calculate fallback succeeded.');
-        }
-      }
-
-      // Whether calculation succeeded or failed internally (but RPC call itself was ok),
-      // the demoday status should now be 'completed'.
 
       // Update local state
       console.log('Updating local state to completed.');
@@ -654,7 +617,7 @@ export default function DemodayContent({ serverUser }: DemodayContentProps) {
       );
       setAvailableDemodays(updatedDemodays);
 
-      // Fetch the results (might be empty if calculation failed internally)
+      // Fetch the results
       console.log('Fetching results...');
       await fetchResultsForDemoday(selectedDemoday.id);
 

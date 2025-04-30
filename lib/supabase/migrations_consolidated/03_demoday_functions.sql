@@ -118,35 +118,8 @@ BEGIN
 END;
 $$;
 
--- 4. Debug-enhanced function to calculate final results
+-- 4. Unified calculation function for demoday results
 CREATE OR REPLACE FUNCTION calculate_demoday_results(p_demoday_id uuid) 
-RETURNS boolean
-LANGUAGE plpgsql
-SECURITY DEFINER
-AS $$
-BEGIN
-  -- Simply use our proven emergency function that handles all edge cases
-  PERFORM emergency_calculate_demoday(p_demoday_id);
-  RETURN true;
-END;
-$$;
-
--- 5. Alternative calculation function that bypasses RLS
-CREATE OR REPLACE FUNCTION force_calculate_demoday_results(p_demoday_id uuid) 
-RETURNS boolean
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-BEGIN
-  -- Use our guaranteed results function
-  PERFORM emergency_calculate_demoday(p_demoday_id);
-  RETURN true;
-END;
-$$;
-
--- 6. Bulletproof calculation function with explicit SQL
-CREATE OR REPLACE FUNCTION emergency_calculate_demoday(p_demoday_id uuid) 
 RETURNS jsonb
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -381,8 +354,6 @@ GRANT EXECUTE ON FUNCTION start_demoday_pitching(uuid) TO postgres, authenticate
 GRANT EXECUTE ON FUNCTION register_as_angel(uuid, uuid) TO postgres, authenticated, anon, service_role;
 GRANT EXECUTE ON FUNCTION invest_in_pitch(uuid, uuid, uuid, numeric) TO postgres, authenticated, anon, service_role;
 GRANT EXECUTE ON FUNCTION calculate_demoday_results(uuid) TO postgres, authenticated, anon, service_role;
-GRANT EXECUTE ON FUNCTION force_calculate_demoday_results(uuid) TO postgres, authenticated, anon, service_role;
-GRANT EXECUTE ON FUNCTION emergency_calculate_demoday(uuid) TO postgres, authenticated, anon, service_role;
 GRANT EXECUTE ON FUNCTION create_test_demoday_data(uuid, uuid) TO postgres, authenticated, anon, service_role;
 GRANT EXECUTE ON FUNCTION clear_demoday_data(uuid) TO postgres, authenticated, anon, service_role;
 GRANT EXECUTE ON FUNCTION get_demoday_diagnostics(uuid) TO postgres, authenticated, anon, service_role; 

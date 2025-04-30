@@ -51,6 +51,6 @@ To apply the consolidated migrations to a Supabase project:
 
 If you encounter issues with the demoday calculations, you can use these functions for debugging:
 
-- `force_calculate_demoday_results(demoday_id)`: Alternative calculation function that bypasses RLS
+- `calculate_demoday_results(demoday_id)`: Comprehensive calculation function that processes and returns detailed results
 - `create_test_demoday_data(demoday_id, user_id)`: Creates test data for a demoday
 - `clear_demoday_data(demoday_id)`: Clears all data for a demoday
