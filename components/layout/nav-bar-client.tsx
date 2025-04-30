@@ -16,6 +16,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Menu } from 'lucide-react';
 
 // Simple inline UserMenu component
 function InlineUserMenu({ user }: { user: User }) {
@@ -147,6 +148,137 @@ function InlineUserMenu({ user }: { user: User }) {
   );
 }
 
+// Mobile menu component that shows on small screens
+function MobileMenu({
+  user,
+  pathname,
+}: {
+  user: User | null;
+  pathname: string;
+}) {
+  const router = useRouter();
+  const [profile, setProfile] = useState<{
+    id: string;
+    full_name: string | null;
+    avatar_url: string | null;
+  } | null>(null);
+
+  // Load profile data when menu opens if user is logged in
+  const handleMenuOpen = async (open: boolean) => {
+    if (open && user && !profile) {
+      try {
+        const supabase = createClient();
+        const { data } = await supabase
+          .from('profiles')
+          .select('id, full_name, avatar_url')
+          .eq('id', user.id)
+          .single();
+
+        if (data) {
+          setProfile(data);
+        }
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+      }
+    }
+  };
+
+  const signOut = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.refresh();
+  };
+
+  return (
+    <DropdownMenu onOpenChange={handleMenuOpen}>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="md:hidden">
+          <Menu className="h-5 w-5" />
+          <span className="sr-only">Open menu</span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuLabel>
+          <div className="flex flex-col space-y-1">
+            <p className="text-sm font-medium leading-none">
+              {user ? profile?.full_name || 'NS Member' : 'Navigation'}
+            </p>
+            {user && (
+              <p className="text-xs leading-none text-muted-foreground">
+                {user.email}
+              </p>
+            )}
+          </div>
+        </DropdownMenuLabel>
+
+        <DropdownMenuSeparator />
+
+        <DropdownMenuItem asChild>
+          <Link
+            href="/timeline"
+            className={pathname === '/timeline' ? 'bg-secondary/50' : ''}
+          >
+            Timeline
+          </Link>
+        </DropdownMenuItem>
+
+        <DropdownMenuItem asChild>
+          <Link
+            href="/people"
+            className={pathname === '/people' ? 'bg-secondary/50' : ''}
+          >
+            People
+          </Link>
+        </DropdownMenuItem>
+
+        <DropdownMenuItem asChild>
+          <Link
+            href="/ideas"
+            className={pathname === '/ideas' ? 'bg-secondary/50' : ''}
+          >
+            Ideas
+          </Link>
+        </DropdownMenuItem>
+
+        <DropdownMenuItem asChild>
+          <Link
+            href="/demoday"
+            className={pathname === '/demoday' ? 'bg-secondary/50' : ''}
+          >
+            Demoday
+          </Link>
+        </DropdownMenuItem>
+
+        {user ? (
+          <>
+            <DropdownMenuSeparator />
+
+            <DropdownMenuItem asChild>
+              <Link href="/profile/me">Edit My Profile</Link>
+            </DropdownMenuItem>
+
+            <DropdownMenuItem asChild>
+              <Link href="/ideas/new">Add New Project/Idea</Link>
+            </DropdownMenuItem>
+
+            <DropdownMenuSeparator />
+
+            <DropdownMenuItem onClick={signOut}>Log out</DropdownMenuItem>
+          </>
+        ) : (
+          <>
+            <DropdownMenuSeparator />
+
+            <DropdownMenuItem asChild>
+              <Link href="/sign-in">Sign In</Link>
+            </DropdownMenuItem>
+          </>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 export default function NavBarClient({
   initialUser,
 }: {
@@ -229,13 +361,19 @@ export default function NavBarClient({
 
         <div className="flex flex-1 items-center justify-end">
           <div className="flex items-center gap-2">
-            {user ? (
-              <InlineUserMenu user={user} />
-            ) : (
-              <Button asChild size="sm">
-                <Link href="/sign-in">Sign In</Link>
-              </Button>
-            )}
+            {/* Mobile menu component */}
+            <MobileMenu user={user} pathname={pathname} />
+
+            {/* Desktop auth/profile component */}
+            <div className="hidden md:block">
+              {user ? (
+                <InlineUserMenu user={user} />
+              ) : (
+                <Button asChild size="sm">
+                  <Link href="/sign-in">Sign In</Link>
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </div>
