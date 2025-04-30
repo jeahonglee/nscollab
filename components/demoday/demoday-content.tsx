@@ -163,37 +163,45 @@ export default function DemodayContent({ serverUser }: DemodayContentProps) {
   const fetchDataForDemoday = async (demodayId: string) => {
     setIsLoading(true);
     try {
-      // Fetch pitches for the demoday
+      // First, get the demoday status
+      const { data: demodayData, error: demodayError } = await supabase
+        .from('demodays')
+        .select('status, host_id')
+        .eq('id', demodayId)
+        .single();
+
+      if (demodayError) throw demodayError;
+
+      // Fetch pitches for the demoday (needed for all statuses)
       await fetchPitchesForDemoday(demodayId);
 
-      // Fetch results if they exist
-      await fetchResultsForDemoday(demodayId);
+      // Only fetch results and user balances for non-upcoming demodays
+      if (demodayData.status !== 'upcoming') {
+        // Fetch results if they exist
+        await fetchResultsForDemoday(demodayId);
 
-      // Fetch user balance
-      if (user) {
-        await fetchUserBalance(demodayId, user.id);
+        // Fetch user balance
+        if (user) {
+          await fetchUserBalance(demodayId, user.id);
+        }
+      } else {
+        // Clear results and balance for upcoming demodays
+        setDemodayResults(null);
+        setUserBalance(null);
       }
 
-      // Check if user is host - use a direct query to ensure we have the latest data
+      // Check if user is host
       if (user) {
-        const { data: demodayData, error: demodayError } = await supabase
-          .from('demodays')
-          .select('host_id')
-          .eq('id', demodayId)
-          .single();
+        const isUserHost =
+          user.id === demodayData.host_id || demodayData.host_id === null;
+        setIsHost(isUserHost);
 
-        if (!demodayError && demodayData) {
-          const isUserHost =
-            user.id === demodayData.host_id || demodayData.host_id === null;
-          setIsHost(isUserHost);
-
-          // Update the local availableDemodays with the latest host_id
-          setAvailableDemodays((prevDemodays) =>
-            prevDemodays.map((d) =>
-              d.id === demodayId ? { ...d, host_id: demodayData.host_id } : d
-            )
-          );
-        }
+        // Update the local availableDemodays with the latest host_id
+        setAvailableDemodays((prevDemodays) =>
+          prevDemodays.map((d) =>
+            d.id === demodayId ? { ...d, host_id: demodayData.host_id } : d
+          )
+        );
       }
     } catch (err) {
       console.error('Error fetching demoday data:', err);
