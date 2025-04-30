@@ -39,7 +39,7 @@ export default function DemodayDetailsDisplay({
   const formatEventDate = (dateString: string): string => {
     try {
       return format(parseISO(dateString), 'MMMM yyyy');
-    } catch (e) {
+    } catch {
       return 'Invalid Date';
     }
   };

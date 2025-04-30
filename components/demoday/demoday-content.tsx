@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { User } from '@supabase/supabase-js';
 import { createClient } from '@/utils/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -16,7 +16,7 @@ import {
 } from 'date-fns'; // Import date-fns helpers
 import PitchItem from './pitch-item';
 import PitchModal from './pitch-modal';
-import { AlertCircle, InfoIcon } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import DemodayDetailsForm from './demoday-details-form';
 import FundingSection from './funding-section';
 import ResultsSection from './results-section';
@@ -96,11 +96,215 @@ export default function DemodayContent({ serverUser }: DemodayContentProps) {
   const [isProcessing, setIsProcessing] = useState(false);
 
   // Determine current and next month start dates for querying
-  const now = new Date();
-  const currentMonthStartDate = startOfMonth(now);
-  const nextMonthStartDate = startOfMonth(addMonths(now, 1));
-  const currentMonthQueryStr = formatMonthForQuery(currentMonthStartDate);
-  const nextMonthQueryStr = formatMonthForQuery(nextMonthStartDate);
+  const now = useMemo(() => new Date(), []);
+  const currentMonthStartDate = useMemo(() => startOfMonth(now), [now]);
+  const nextMonthStartDate = useMemo(
+    () => startOfMonth(addMonths(now, 1)),
+    [now]
+  );
+  const currentMonthQueryStr = useMemo(
+    () => formatMonthForQuery(currentMonthStartDate),
+    [currentMonthStartDate]
+  );
+  const nextMonthQueryStr = useMemo(
+    () => formatMonthForQuery(nextMonthStartDate),
+    [nextMonthStartDate]
+  );
+
+  // Fetch pitches for a specific demoday
+  const fetchPitchesForDemoday = useCallback(
+    async (demodayId: string) => {
+      try {
+        const { data: pitchData, error: pitchError } = await supabase
+          .from('demoday_pitches')
+          .select(
+            `
+          id,
+          demoday_id,
+          idea_id,
+          pitcher_id,
+          submitted_at,
+          ideas:ideas ( id, title, description ),
+          profiles:profiles ( id, full_name, avatar_url, discord_username )
+        `
+          )
+          .eq('demoday_id', demodayId)
+          .order('submitted_at', { ascending: true });
+
+        if (pitchError) throw pitchError;
+        setPitches((pitchData as unknown as Pitch[]) || []);
+      } catch (err) {
+        console.error('Error fetching pitches:', err);
+        throw err;
+      }
+    },
+    [supabase]
+  );
+
+  // Fetch results for a demoday
+  const fetchResultsForDemoday = useCallback(
+    async (demodayId: string) => {
+      try {
+        const { data, error } = await supabase
+          .from('demoday_results')
+          .select('*')
+          .eq('demoday_id', demodayId)
+          .single();
+
+        if (error) {
+          if (error.code === 'PGRST116') {
+            // No rows returned
+            setDemodayResults(null);
+            return;
+          }
+          throw error;
+        }
+
+        if (data) {
+          // Parse JSON fields
+          const parsedData = {
+            ...data,
+            pitch_rankings: data.pitch_rankings as Record<string, unknown>[],
+            investor_rankings: data.investor_rankings as Record<
+              string,
+              unknown
+            >[],
+          };
+          setDemodayResults(parsedData);
+        } else {
+          setDemodayResults(null);
+        }
+      } catch (err) {
+        console.error('Error fetching results:', err);
+        setDemodayResults(null);
+      }
+    },
+    [supabase]
+  );
+
+  // Fetch user balance for a demoday
+  const fetchUserBalance = useCallback(
+    async (demodayId: string, userId: string) => {
+      try {
+        const { data, error } = await supabase
+          .from('user_balances')
+          .select('*')
+          .eq('demoday_id', demodayId)
+          .eq('user_id', userId)
+          .single();
+
+        if (error) {
+          if (error.code === 'PGRST116') {
+            // No rows returned - user hasn't registered as an angel yet
+            setUserBalance(null);
+            return;
+          }
+          throw error;
+        }
+
+        setUserBalance(data);
+      } catch (err) {
+        console.error('Error fetching user balance:', err);
+        setUserBalance(null);
+      }
+    },
+    [supabase]
+  );
+
+  // Fetch user's ideas
+  const fetchUserIdeas = useCallback(
+    async (userId: string) => {
+      try {
+        const { data: memberData, error: memberError } = await supabase
+          .from('idea_members')
+          .select('idea_id')
+          .eq('user_id', userId);
+
+        if (memberError) throw memberError;
+        const ideaIds = memberData?.map((m) => m.idea_id) || [];
+
+        if (ideaIds.length === 0) {
+          setUserIdeas([]);
+          return;
+        }
+
+        const { data: ideaData, error: ideaError } = await supabase
+          .from('ideas')
+          .select('id, title, description')
+          .in('id', ideaIds);
+
+        if (ideaError) throw ideaError;
+        setUserIdeas(ideaData || []);
+      } catch (err) {
+        console.error('Error fetching user ideas:', err);
+        setUserIdeas([]);
+      }
+    },
+    [supabase]
+  );
+
+  // Fetch all data for a specific demoday
+  const fetchDataForDemoday = useCallback(
+    async (demodayId: string) => {
+      setIsLoading(true);
+      try {
+        // First, get the demoday status
+        const { data: demodayData, error: demodayError } = await supabase
+          .from('demodays')
+          .select('status, host_id')
+          .eq('id', demodayId)
+          .single();
+
+        if (demodayError) throw demodayError;
+
+        // Fetch pitches for the demoday (needed for all statuses)
+        await fetchPitchesForDemoday(demodayId);
+
+        // Only fetch results and user balances for non-upcoming demodays
+        if (demodayData.status !== 'upcoming') {
+          // Fetch results if they exist
+          await fetchResultsForDemoday(demodayId);
+
+          // Fetch user balance
+          if (user) {
+            await fetchUserBalance(demodayId, user.id);
+          }
+        } else {
+          // Clear results and balance for upcoming demodays
+          setDemodayResults(null);
+          setUserBalance(null);
+        }
+
+        // Check if user is host
+        if (user) {
+          const isUserHost =
+            user.id === demodayData.host_id || demodayData.host_id === null;
+          setIsHost(isUserHost);
+
+          // Update the local availableDemodays with the latest host_id
+          setAvailableDemodays((prevDemodays) =>
+            prevDemodays.map((d) =>
+              d.id === demodayId ? { ...d, host_id: demodayData.host_id } : d
+            )
+          );
+        }
+      } catch (err) {
+        console.error('Error fetching demoday data:', err);
+        setError(
+          `Failed to load demoday data: ${err instanceof Error ? err.message : 'Unknown error'}`
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [
+      supabase,
+      user,
+      fetchPitchesForDemoday,
+      fetchResultsForDemoday,
+      fetchUserBalance,
+    ]
+  );
 
   // Fetch available Demodays and Pitches for the initially selected month
   const fetchInitialData = useCallback(async () => {
@@ -157,181 +361,15 @@ export default function DemodayContent({ serverUser }: DemodayContentProps) {
     } finally {
       setIsLoading(false);
     }
-  }, [supabase, user, currentMonthQueryStr, nextMonthQueryStr]);
-
-  // Fetch all data for a specific demoday
-  const fetchDataForDemoday = async (demodayId: string) => {
-    setIsLoading(true);
-    try {
-      // First, get the demoday status
-      const { data: demodayData, error: demodayError } = await supabase
-        .from('demodays')
-        .select('status, host_id')
-        .eq('id', demodayId)
-        .single();
-
-      if (demodayError) throw demodayError;
-
-      // Fetch pitches for the demoday (needed for all statuses)
-      await fetchPitchesForDemoday(demodayId);
-
-      // Only fetch results and user balances for non-upcoming demodays
-      if (demodayData.status !== 'upcoming') {
-        // Fetch results if they exist
-        await fetchResultsForDemoday(demodayId);
-
-        // Fetch user balance
-        if (user) {
-          await fetchUserBalance(demodayId, user.id);
-        }
-      } else {
-        // Clear results and balance for upcoming demodays
-        setDemodayResults(null);
-        setUserBalance(null);
-      }
-
-      // Check if user is host
-      if (user) {
-        const isUserHost =
-          user.id === demodayData.host_id || demodayData.host_id === null;
-        setIsHost(isUserHost);
-
-        // Update the local availableDemodays with the latest host_id
-        setAvailableDemodays((prevDemodays) =>
-          prevDemodays.map((d) =>
-            d.id === demodayId ? { ...d, host_id: demodayData.host_id } : d
-          )
-        );
-      }
-    } catch (err) {
-      console.error('Error fetching demoday data:', err);
-      setError(
-        `Failed to load demoday data: ${err instanceof Error ? err.message : 'Unknown error'}`
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Fetch pitches for a specific demoday
-  const fetchPitchesForDemoday = async (demodayId: string) => {
-    try {
-      const { data: pitchData, error: pitchError } = await supabase
-        .from('demoday_pitches')
-        .select(
-          `
-          id,
-          demoday_id,
-          idea_id,
-          pitcher_id,
-          submitted_at,
-          ideas:ideas ( id, title, description ),
-          profiles:profiles ( id, full_name, avatar_url, discord_username )
-        `
-        )
-        .eq('demoday_id', demodayId)
-        .order('submitted_at', { ascending: true });
-
-      if (pitchError) throw pitchError;
-      setPitches((pitchData as unknown as Pitch[]) || []);
-    } catch (err) {
-      console.error('Error fetching pitches:', err);
-      throw err;
-    }
-  };
-
-  // Fetch results for a demoday
-  const fetchResultsForDemoday = async (demodayId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('demoday_results')
-        .select('*')
-        .eq('demoday_id', demodayId)
-        .single();
-
-      if (error) {
-        if (error.code === 'PGRST116') {
-          // No rows returned
-          setDemodayResults(null);
-          return;
-        }
-        throw error;
-      }
-
-      if (data) {
-        // Parse JSON fields
-        const parsedData = {
-          ...data,
-          pitch_rankings: data.pitch_rankings as any[],
-          investor_rankings: data.investor_rankings as any[],
-        };
-        setDemodayResults(parsedData);
-      } else {
-        setDemodayResults(null);
-      }
-    } catch (err) {
-      console.error('Error fetching results:', err);
-      setDemodayResults(null);
-    }
-  };
-
-  // Fetch user balance for a demoday
-  const fetchUserBalance = async (demodayId: string, userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('user_balances')
-        .select('*')
-        .eq('demoday_id', demodayId)
-        .eq('user_id', userId)
-        .single();
-
-      if (error) {
-        if (error.code === 'PGRST116') {
-          // No rows returned - user hasn't registered as an angel yet
-          setUserBalance(null);
-          return;
-        }
-        throw error;
-      }
-
-      setUserBalance(data);
-    } catch (err) {
-      console.error('Error fetching user balance:', err);
-      setUserBalance(null);
-    }
-  };
-
-  // Fetch user's ideas
-  const fetchUserIdeas = useCallback(
-    async (userId: string) => {
-      try {
-        const { data: memberData, error: memberError } = await supabase
-          .from('idea_members')
-          .select('idea_id')
-          .eq('user_id', userId);
-
-        if (memberError) throw memberError;
-        const ideaIds = memberData?.map((m) => m.idea_id) || [];
-
-        if (ideaIds.length === 0) {
-          setUserIdeas([]);
-          return;
-        }
-
-        const { data: ideaData, error: ideaError } = await supabase
-          .from('ideas')
-          .select('id, title, description')
-          .in('id', ideaIds);
-
-        if (ideaError) throw ideaError;
-        setUserIdeas(ideaData || []);
-      } catch (err) {
-        console.error('Error fetching user ideas:', err);
-        setUserIdeas([]);
-      }
-    },
-    [supabase]
-  );
+  }, [
+    supabase,
+    user,
+    currentMonthQueryStr,
+    nextMonthQueryStr,
+    now,
+    fetchDataForDemoday,
+    fetchUserIdeas,
+  ]);
 
   // Handle month tab change
   const handleMonthChange = (newMonthValue: string) => {
@@ -429,7 +467,9 @@ export default function DemodayContent({ serverUser }: DemodayContentProps) {
   };
 
   // Handle demoday details update
-  const handleDemodayDetailsUpdate = async (details: any) => {
+  const handleDemodayDetailsUpdate = async (
+    details: Record<string, unknown>
+  ) => {
     if (!selectedMonth || !user) return;
     const selectedDemoday = availableDemodays.find(
       (d) => d.event_date === selectedMonth
@@ -439,7 +479,9 @@ export default function DemodayContent({ serverUser }: DemodayContentProps) {
     setIsProcessing(true);
     try {
       // Set host_id if it's currently null
-      const updates: any = { details };
+      const updates: { details: Record<string, unknown>; host_id?: string } = {
+        details,
+      };
       if (selectedDemoday.host_id === null) {
         updates.host_id = user.id;
       }
@@ -535,46 +577,6 @@ export default function DemodayContent({ serverUser }: DemodayContentProps) {
     } finally {
       setIsProcessing(false);
     }
-  };
-
-  // Verify investments for a specific demoday
-  const verifyInvestmentsExist = async (demodayId: string) => {
-    // Check direct investments
-    const { data: directInvestments, error: directError } = await supabase
-      .from('demoday_investments')
-      .select('id, pitch_id, amount')
-      .eq('demoday_id', demodayId);
-
-    if (directError) throw directError;
-
-    console.log('Direct investments found:', directInvestments);
-
-    if (!directInvestments || directInvestments.length === 0) {
-      return false;
-    }
-
-    // Calculate total investment amount
-    const totalAmount = directInvestments.reduce(
-      (sum, inv) => sum + (inv.amount || 0),
-      0
-    );
-    console.log('Total investment amount:', totalAmount);
-
-    // Group by pitch to ensure we have investments across pitches
-    const pitchGroups = directInvestments.reduce(
-      (groups, inv) => {
-        if (!groups[inv.pitch_id]) {
-          groups[inv.pitch_id] = 0;
-        }
-        groups[inv.pitch_id] += inv.amount || 0;
-        return groups;
-      },
-      {} as Record<string, number>
-    );
-
-    console.log('Investments by pitch:', pitchGroups);
-
-    return Object.keys(pitchGroups).length > 0;
   };
 
   // Handle calculating results
@@ -686,7 +688,7 @@ export default function DemodayContent({ serverUser }: DemodayContentProps) {
         demoday={{
           ...selectedDemoday,
           details:
-            selectedDemoday.details as unknown as import('@/types/demoday').DemodayDetails,
+            selectedDemoday.details as import('@/types/demoday').DemodayDetails,
           status: selectedDemoday.status as DemodayStatus,
           is_active: selectedDemoday.is_active || false,
           created_at: selectedDemoday.created_at || new Date().toISOString(),
@@ -727,7 +729,15 @@ export default function DemodayContent({ serverUser }: DemodayContentProps) {
             {/* Show funding interface directly in pitching phase */}
             {user && (
               <FundingSection
-                demoday={selectedDemoday}
+                demoday={{
+                  ...selectedDemoday,
+                  details:
+                    selectedDemoday.details as import('@/types/demoday').DemodayDetails,
+                  status: selectedDemoday.status as DemodayStatus,
+                  is_active: selectedDemoday.is_active || false,
+                  created_at:
+                    selectedDemoday.created_at || new Date().toISOString(),
+                }}
                 pitches={pitches}
                 userBalance={userBalance}
                 isHost={isHost}
