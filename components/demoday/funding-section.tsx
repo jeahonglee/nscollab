@@ -269,7 +269,7 @@ export default function FundingSection({
     if (userBalance) {
       setLocalUserBalance(userBalance);
     }
-  }, [userBalance?.id]); // Only update when the balance ID changes, not on every balance change
+  }, [userBalance]); // Include userBalance in the dependency array
 
   // Fetch current investments with improved error handling - only run once on initial load
   useEffect(() => {

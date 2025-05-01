@@ -202,7 +202,7 @@ export default function ResultsSection({
             </h2>
           </div>
 
-          {investorRankings.slice(0, 5).map((investor, index) => {
+          {investorRankings.slice(0, 5).map((investor) => {
             const isCurrentUser = investor.investor_id === currentUserId;
             const returnAmount =
               investor.final_balance - investor.initial_balance;
