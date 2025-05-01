@@ -884,7 +884,7 @@ export default function DemodayContent({ serverUser }: DemodayContentProps) {
       {/* Main content area with max-width */}
       <div className="container mx-auto px-1 py-8 max-w-4xl">
         {/* Content Area - Loading/Error/Content */}
-        <div className="space-y-4 mb-60">
+        <div className="space-y-4">
           {isLoading && !selectedMonth ? (
             <p className="text-center text-muted-foreground">
               Loading available months...
