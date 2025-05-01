@@ -191,7 +191,6 @@ export default function DemodayContent({ serverUser }: DemodayContentProps) {
             investor_rankings: investorRankings || [],
           };
 
-          console.log('Parsed results data:', parsedData);
           setDemodayResults(parsedData);
         } else {
           setDemodayResults(null);
@@ -208,10 +207,6 @@ export default function DemodayContent({ serverUser }: DemodayContentProps) {
   const fetchUserBalance = useCallback(
     async (demodayId: string, userId: string) => {
       try {
-        console.log(
-          `Fetching user balance for demoday ${demodayId} and user ${userId}`
-        );
-
         const { data, error } = await supabase
           .from('user_balances')
           .select('*')
@@ -222,16 +217,12 @@ export default function DemodayContent({ serverUser }: DemodayContentProps) {
         if (error) {
           if (error.code === 'PGRST116') {
             // No rows returned - user hasn't registered as an angel yet
-            console.log(
-              'No user balance found - user is not an angel investor yet'
-            );
             setUserBalance(null);
             return;
           }
           throw error;
         }
 
-        console.log('User balance found:', data);
         setUserBalance(data);
       } catch (err) {
         console.error('Error fetching user balance:', err);
@@ -623,19 +614,9 @@ export default function DemodayContent({ serverUser }: DemodayContentProps) {
 
     setIsProcessing(true);
     try {
-      console.log('Calculating results for demoday:', selectedDemoday.id);
-
       // Call the simplified calculate_demoday_results function
-      const { data: results, error } = await supabase.rpc(
-        'calculate_demoday_results',
-        {
-          p_demoday_id: selectedDemoday.id,
-        }
-      );
-
-      console.log('Calculation function result:', {
-        results,
-        error,
+      const { error } = await supabase.rpc('calculate_demoday_results', {
+        p_demoday_id: selectedDemoday.id,
       });
 
       if (error) {
@@ -645,7 +626,6 @@ export default function DemodayContent({ serverUser }: DemodayContentProps) {
       }
 
       // Update local state
-      console.log('Updating local state to completed.');
       const updatedDemodays = availableDemodays.map((d) =>
         d.id === selectedDemoday.id
           ? { ...d, status: 'completed' as DemodayStatus, is_active: false }
@@ -654,15 +634,12 @@ export default function DemodayContent({ serverUser }: DemodayContentProps) {
       setAvailableDemodays(updatedDemodays);
 
       // Fetch the results
-      console.log('Fetching results...');
       await fetchResultsForDemoday(selectedDemoday.id);
 
       // Fetch user balance
       if (user) {
         await fetchUserBalance(selectedDemoday.id, user.id);
       }
-
-      console.log('Process completed.');
     } catch (err) {
       console.error('Final error in handleCalculateResults:', err);
       setError(
@@ -731,15 +708,6 @@ export default function DemodayContent({ serverUser }: DemodayContentProps) {
     if (!selectedDemoday) return null;
 
     const currentStatus = selectedDemoday.status;
-
-    // Debug logging
-    console.log('Rendering demoday content:', {
-      status: currentStatus,
-      demoday_id: selectedDemoday.id,
-      userBalance,
-      isAngel: userBalance?.is_angel,
-      pitches: pitches.length,
-    });
 
     // Show demoday details at the top for all phases
     const detailsSection = (

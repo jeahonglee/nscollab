@@ -3,6 +3,7 @@ import { ThemeProvider } from 'next-themes';
 import { Geist } from 'next/font/google';
 import { hasEnvVars } from '@/utils/supabase/check-env-vars';
 import { EnvVarWarning } from '@/components/env-var-warning';
+import { Analytics } from '@vercel/analytics/react';
 import NavBar from '@/components/layout/nav-bar';
 import './globals.css';
 import ThemeSwitcherWrapper from '@/components/layout/theme-switcher-wrapper';
@@ -81,6 +82,7 @@ export default function RootLayout({
             </footer>
           </main>
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );

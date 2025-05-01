@@ -104,9 +104,9 @@ export default function ResultsSection({
           animate="show"
           className="space-y-4"
         >
-          <div className="flex items-center gap-2 pb-1 border-b border-amber-600/30">
-            <BadgeCheck className="w-4 h-4 text-amber-400" />
-            <h2 className="text-xl font-bold bg-gradient-to-r from-amber-300 to-amber-500 bg-clip-text text-transparent">
+          <div className="flex items-center gap-2 pb-1 border-b border-amber-600/30 dark:border-amber-600/30">
+            <BadgeCheck className="w-4 h-4 text-amber-500 dark:text-amber-400" />
+            <h2 className="text-xl font-bold bg-gradient-to-r from-amber-500 to-amber-700 dark:from-amber-300 dark:to-amber-500 bg-clip-text text-transparent">
               Top Projects
             </h2>
           </div>
@@ -117,7 +117,7 @@ export default function ResultsSection({
               variants={item}
               whileHover={{ scale: 1.01, transition: { duration: 0.2 } }}
             >
-              <Card className="bg-gradient-to-b from-gray-900 to-gray-950 border-amber-900/50 overflow-hidden hover:border-amber-800/70 transition-all duration-300 shadow-md relative">
+              <Card className="bg-white dark:bg-gradient-to-b dark:from-gray-900 dark:to-gray-950 border-amber-200 dark:border-amber-900/50 overflow-hidden hover:border-amber-300 dark:hover:border-amber-800/70 transition-all duration-300 shadow-md relative">
                 {index === 0 && (
                   <div className="absolute -right-8 -top-8 w-16 h-16 bg-amber-500/10 rounded-full blur-2xl"></div>
                 )}
@@ -125,7 +125,7 @@ export default function ResultsSection({
                   <div className="flex items-center gap-3">
                     <div className="flex-shrink-0">
                       {pitch.pitcher_avatar ? (
-                        <div className="relative h-10 w-10 rounded-full overflow-hidden border border-amber-500/40">
+                        <div className="relative h-10 w-10 rounded-full overflow-hidden border border-amber-300 dark:border-amber-500/40">
                           <Image
                             src={pitch.pitcher_avatar}
                             alt={pitch.pitcher_name || 'Pitcher'}
@@ -135,7 +135,7 @@ export default function ResultsSection({
                           />
                         </div>
                       ) : (
-                        <div className="h-10 w-10 rounded-full bg-gradient-to-br from-amber-800 to-amber-600 flex items-center justify-center text-sm font-semibold border border-amber-500/40">
+                        <div className="h-10 w-10 rounded-full bg-gradient-to-br from-amber-400 to-amber-300 dark:from-amber-800 dark:to-amber-600 flex items-center justify-center text-sm font-semibold border border-amber-300 dark:border-amber-500/40">
                           {(
                             pitch.pitcher_name ||
                             pitch.idea_title ||
@@ -149,9 +149,9 @@ export default function ResultsSection({
                       <h3 className="text-base font-bold tracking-tight truncate">
                         {pitch.idea_title}
                       </h3>
-                      <p className="text-xs text-gray-400 truncate">
+                      <p className="text-xs text-slate-500 dark:text-gray-400 truncate">
                         by{' '}
-                        <span className="text-amber-400/90">
+                        <span className="text-amber-600 dark:text-amber-400/90">
                           {pitch.pitcher_name ||
                             pitch.pitcher_username ||
                             'Anonymous'}
@@ -162,21 +162,23 @@ export default function ResultsSection({
                     <div className="ml-auto">{getPositionTag(pitch.rank)}</div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3 mt-3 pt-3 border-t border-gray-800">
-                    <div className="bg-gray-800/50 p-2 rounded">
-                      <p className="text-xs text-gray-400 font-medium">
+                  <div className="grid grid-cols-2 gap-3 mt-3 pt-3 border-t border-slate-200 dark:border-gray-800">
+                    <div className="bg-slate-100 dark:bg-gray-800/50 p-2 rounded">
+                      <p className="text-xs text-slate-500 dark:text-gray-400 font-medium">
                         Total Funding
                       </p>
                       <p className="text-sm font-bold flex items-baseline">
-                        <span className="text-amber-400 mr-0.5 text-xs">$</span>
+                        <span className="text-amber-600 dark:text-amber-400 mr-0.5 text-xs">
+                          $
+                        </span>
                         {formatCurrency(pitch.total_funding)}
                       </p>
                     </div>
-                    <div className="bg-gray-800/50 p-2 rounded">
-                      <p className="text-xs text-gray-400 font-medium">
+                    <div className="bg-slate-100 dark:bg-gray-800/50 p-2 rounded">
+                      <p className="text-xs text-slate-500 dark:text-gray-400 font-medium">
                         Investor Return
                       </p>
-                      <p className="text-sm font-bold text-green-400 flex items-center">
+                      <p className="text-sm font-bold text-green-600 dark:text-green-400 flex items-center">
                         <TrendingUp className="w-3 h-3 mr-0.5" />
                         {getReturnMultiplier(pitch.rank)}
                       </p>
@@ -195,9 +197,9 @@ export default function ResultsSection({
           animate="show"
           className="space-y-4"
         >
-          <div className="flex items-center gap-2 pb-1 border-b border-blue-600/30">
-            <Trophy className="w-4 h-4 text-blue-400" />
-            <h2 className="text-xl font-bold bg-gradient-to-r from-blue-300 to-blue-500 bg-clip-text text-transparent">
+          <div className="flex items-center gap-2 pb-1 border-b border-blue-400/30 dark:border-blue-600/30">
+            <Trophy className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+            <h2 className="text-xl font-bold bg-gradient-to-r from-blue-500 to-blue-700 dark:from-blue-300 dark:to-blue-500 bg-clip-text text-transparent">
               Top Investors
             </h2>
           </div>
@@ -217,8 +219,8 @@ export default function ResultsSection({
                 <Card
                   className={`${
                     isCurrentUser
-                      ? 'bg-gradient-to-b from-blue-950 to-blue-900 border-blue-700/70'
-                      : 'bg-gradient-to-b from-gray-900 to-gray-950 border-gray-800/80'
+                      ? 'bg-blue-50 dark:bg-gradient-to-b dark:from-blue-950 dark:to-blue-900 border-blue-200 dark:border-blue-700/70'
+                      : 'bg-white dark:bg-gradient-to-b dark:from-gray-900 dark:to-gray-950 border-slate-200 dark:border-gray-800/80'
                   } overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 relative`}
                 >
                   {isCurrentUser && (
@@ -231,8 +233,8 @@ export default function ResultsSection({
                           <div
                             className={`relative h-10 w-10 rounded-full overflow-hidden border ${
                               isCurrentUser
-                                ? 'border-blue-500/60'
-                                : 'border-gray-500/40'
+                                ? 'border-blue-300 dark:border-blue-500/60'
+                                : 'border-slate-300 dark:border-gray-500/40'
                             }`}
                           >
                             <Image
@@ -247,8 +249,8 @@ export default function ResultsSection({
                           <div
                             className={`h-10 w-10 rounded-full ${
                               isCurrentUser
-                                ? 'bg-gradient-to-br from-blue-800 to-blue-600'
-                                : 'bg-gradient-to-br from-gray-700 to-gray-600'
+                                ? 'bg-gradient-to-br from-blue-300 to-blue-200 dark:from-blue-800 dark:to-blue-600'
+                                : 'bg-gradient-to-br from-slate-300 to-slate-200 dark:from-gray-700 dark:to-gray-600'
                             } flex items-center justify-center text-sm font-semibold`}
                           >
                             {(investor.investor_name || 'A').charAt(0)}
@@ -264,7 +266,7 @@ export default function ResultsSection({
                               'Anonymous'}
                           </h3>
                           {isCurrentUser && (
-                            <span className="ml-1 text-xs font-medium text-blue-400 bg-blue-400/10 px-1.5 py-0.5 rounded">
+                            <span className="ml-1 text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-400/10 px-1.5 py-0.5 rounded">
                               You
                             </span>
                           )}
@@ -273,8 +275,8 @@ export default function ResultsSection({
                           <span
                             className={`text-xs font-medium rounded mr-1 ${
                               investor.rank <= 3
-                                ? 'text-blue-300'
-                                : 'text-gray-300'
+                                ? 'text-blue-600 dark:text-blue-300'
+                                : 'text-slate-600 dark:text-gray-300'
                             }`}
                           >
                             Rank #{investor.rank}
@@ -283,8 +285,8 @@ export default function ResultsSection({
                           <div
                             className={`text-2xs rounded text-xs font-medium ${
                               isPositiveReturn
-                                ? 'text-green-400'
-                                : 'text-red-400'
+                                ? 'text-green-600 dark:text-green-400'
+                                : 'text-red-600 dark:text-red-400'
                             }`}
                           >
                             {isPositiveReturn ? '+' : '-'}$
@@ -294,16 +296,24 @@ export default function ResultsSection({
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-3 mt-3 pt-3 border-t border-gray-800">
+                    <div className="grid grid-cols-3 gap-3 mt-3 pt-3 border-t border-slate-200 dark:border-gray-800">
                       <div
-                        className={`bg-gray-800/50 p-2 rounded ${isCurrentUser ? 'bg-blue-900/30' : ''}`}
+                        className={`${
+                          isCurrentUser
+                            ? 'bg-blue-100/50 dark:bg-blue-900/30'
+                            : 'bg-slate-100 dark:bg-gray-800/50'
+                        } p-2 rounded`}
                       >
-                        <p className="text-xs text-gray-400 font-medium">
+                        <p className="text-xs text-slate-500 dark:text-gray-400 font-medium">
                           Initial
                         </p>
                         <p className="text-sm font-semibold flex items-baseline">
                           <span
-                            className={`text-xs ${isCurrentUser ? 'text-blue-400' : 'text-gray-400'}`}
+                            className={`text-xs ${
+                              isCurrentUser
+                                ? 'text-blue-600 dark:text-blue-400'
+                                : 'text-slate-500 dark:text-gray-400'
+                            }`}
                           >
                             $
                           </span>
@@ -311,14 +321,22 @@ export default function ResultsSection({
                         </p>
                       </div>
                       <div
-                        className={`bg-gray-800/50 p-2 rounded ${isCurrentUser ? 'bg-blue-900/30' : ''}`}
+                        className={`${
+                          isCurrentUser
+                            ? 'bg-blue-100/50 dark:bg-blue-900/30'
+                            : 'bg-slate-100 dark:bg-gray-800/50'
+                        } p-2 rounded`}
                       >
-                        <p className="text-xs text-gray-400 font-medium">
+                        <p className="text-xs text-slate-500 dark:text-gray-400 font-medium">
                           Invested
                         </p>
                         <p className="text-sm font-semibold flex items-baseline">
                           <span
-                            className={`text-xs ${isCurrentUser ? 'text-blue-400' : 'text-gray-400'}`}
+                            className={`text-xs ${
+                              isCurrentUser
+                                ? 'text-blue-600 dark:text-blue-400'
+                                : 'text-slate-500 dark:text-gray-400'
+                            }`}
                           >
                             $
                           </span>
@@ -326,13 +344,21 @@ export default function ResultsSection({
                         </p>
                       </div>
                       <div
-                        className={`bg-gray-800/50 p-2 rounded ${isCurrentUser ? 'bg-blue-900/30' : ''}`}
+                        className={`${
+                          isCurrentUser
+                            ? 'bg-blue-100/50 dark:bg-blue-900/30'
+                            : 'bg-slate-100 dark:bg-gray-800/50'
+                        } p-2 rounded`}
                       >
-                        <p className="text-xs text-gray-400 font-medium">
+                        <p className="text-xs text-slate-500 dark:text-gray-400 font-medium">
                           Final
                         </p>
                         <p
-                          className={`text-sm font-semibold flex items-baseline ${isPositiveReturn ? 'text-green-400' : 'text-red-400'}`}
+                          className={`text-sm font-semibold flex items-baseline ${
+                            isPositiveReturn
+                              ? 'text-green-600 dark:text-green-400'
+                              : 'text-red-600 dark:text-red-400'
+                          }`}
                         >
                           <span className="text-xs">$</span>
                           {formatCurrency(investor.final_balance)}

@@ -48,33 +48,6 @@ interface FundingSectionProps {
   isProcessing: boolean;
 }
 
-// Create a memoized debug component to prevent re-renders
-const DebugInfo = memo(({ investments }: { investments: Investment[] }) => (
-  <Card className="mb-6 bg-gray-900 border-yellow-800">
-    <CardContent className="pt-4 text-xs">
-      <details>
-        <summary className="cursor-pointer text-yellow-400 mb-2">
-          Debug Information (click to expand)
-        </summary>
-        <div className="space-y-2 text-gray-400">
-          <p>Current Investments: {investments.length}</p>
-          <ul className="list-disc pl-5 space-y-1">
-            {investments.map((inv) => (
-              <li key={inv.id}>
-                Pitch ID: {inv.pitch_id} - Amount: $
-                {typeof inv.amount === 'number'
-                  ? inv.amount.toLocaleString()
-                  : inv.amount}
-              </li>
-            ))}
-          </ul>
-        </div>
-      </details>
-    </CardContent>
-  </Card>
-));
-DebugInfo.displayName = 'DebugInfo';
-
 // Memoized PitchCard component to prevent unnecessary re-renders
 interface PitchCardProps {
   pitch: Pitch;
@@ -84,9 +57,25 @@ interface PitchCardProps {
   isInvesting: boolean;
   onAmountChange: (value: string) => void;
   onAddAmount: (amount: number) => void;
-  onInvestAll: () => void;
   onInvest: () => void;
 }
+
+// Format a number to include commas for thousands
+const formatAmount = (value: string): string => {
+  if (!value) return '';
+  // Remove non-numeric characters and parse as number
+  const number = parseInt(value.replace(/[^0-9]/g, ''), 10);
+  if (isNaN(number)) return '';
+  // Format with commas
+  return number.toLocaleString();
+};
+
+// Parse formatted amount back to number
+const parseFormattedAmount = (value: string): number => {
+  if (!value) return 0;
+  // Remove all non-numeric characters and parse
+  return parseInt(value.replace(/[^0-9]/g, ''), 10) || 0;
+};
 
 const PitchCard = memo(
   ({
@@ -97,7 +86,6 @@ const PitchCard = memo(
     isInvesting,
     onAmountChange,
     onAddAmount,
-    onInvestAll,
     onInvest,
   }: PitchCardProps) => {
     const hasInvested = currentInvestmentAmount > 0;
@@ -107,10 +95,10 @@ const PitchCard = memo(
         <CardContent className="pt-6">
           <div className="flex flex-col md:flex-row gap-6">
             {/* Left side: Pitch information */}
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <div className="flex items-center gap-3 mb-3">
                 {pitch.profiles.avatar_url ? (
-                  <div className="relative h-12 w-12 rounded-full overflow-hidden">
+                  <div className="relative h-12 w-12 rounded-full overflow-hidden shrink-0">
                     <Image
                       src={pitch.profiles.avatar_url}
                       alt={pitch.profiles.full_name || 'Pitcher'}
@@ -119,13 +107,15 @@ const PitchCard = memo(
                     />
                   </div>
                 ) : (
-                  <div className="h-12 w-12 rounded-full bg-gray-700 flex items-center justify-center text-lg font-semibold">
+                  <div className="h-12 w-12 rounded-full bg-slate-300 dark:bg-slate-700 flex items-center justify-center text-lg font-semibold shrink-0">
                     {(pitch.profiles.full_name || 'A').charAt(0)}
                   </div>
                 )}
-                <div>
-                  <h3 className="text-lg font-semibold">{pitch.ideas.title}</h3>
-                  <p className="text-sm text-muted-foreground">
+                <div className="min-w-0">
+                  <h3 className="text-lg font-semibold truncate">
+                    {pitch.ideas.title}
+                  </h3>
+                  <p className="text-sm text-muted-foreground truncate">
                     by{' '}
                     {pitch.profiles.full_name ||
                       pitch.profiles.discord_username ||
@@ -135,43 +125,50 @@ const PitchCard = memo(
               </div>
 
               {/* Always show the investment amount section */}
-              <div className="mb-4 flex items-center p-3 bg-blue-950/40 rounded-md border border-blue-800">
+              <div className="mb-4 flex items-center p-3 bg-blue-100/50 dark:bg-blue-950/40 rounded-md border border-blue-200 dark:border-blue-800">
                 <div className="flex-1">
-                  <p className="text-blue-300 font-medium">Your Investment</p>
-                  <p className="text-xl font-bold text-blue-100">
+                  <p className="text-blue-700 dark:text-blue-300 font-medium">
+                    Your Investment
+                  </p>
+                  <p className="text-xl font-bold text-blue-800 dark:text-blue-100">
                     ${currentInvestmentAmount.toLocaleString()}
                   </p>
                 </div>
                 {hasInvested && (
-                  <div className="rounded-full bg-blue-600 px-3 py-1 text-xs font-medium">
+                  <div className="rounded-full bg-blue-600 px-3 py-1 text-xs font-medium text-white">
                     Invested
                   </div>
                 )}
               </div>
 
               <div className="my-4">
-                <p className="text-sm text-gray-300">
+                <p className="text-sm text-slate-700 dark:text-slate-300 line-clamp-3">
                   {pitch.ideas.description}
                 </p>
               </div>
             </div>
 
             {/* Right side: Investment controls */}
-            <div className="flex flex-col gap-3 min-w-[320px]">
+            <div className="flex flex-col gap-3 w-full md:max-w-[280px]">
               <div className="flex items-center gap-2">
-                <Input
-                  type="text"
-                  value={investmentAmount || '0'}
-                  onChange={(e) => onAmountChange(e.target.value)}
-                  className="text-right"
-                  placeholder="Amount to invest"
-                />
-                <span className="whitespace-nowrap text-gray-400">
+                <div className="relative flex-1">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400">
+                    $
+                  </span>
+                  <Input
+                    type="text"
+                    value={investmentAmount}
+                    onChange={(e) => onAmountChange(e.target.value)}
+                    className="text-right pl-6"
+                    placeholder="0"
+                  />
+                </div>
+                <span className="whitespace-nowrap text-slate-500 dark:text-slate-400 text-sm">
                   / ${remainingBalance.toLocaleString()}
                 </span>
               </div>
 
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-3 gap-2">
                 <Button
                   size="sm"
                   variant="outline"
@@ -196,14 +193,6 @@ const PitchCard = memo(
                 >
                   +$100k
                 </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={onInvestAll}
-                  disabled={!remainingBalance}
-                >
-                  All
-                </Button>
               </div>
 
               <Button
@@ -212,8 +201,8 @@ const PitchCard = memo(
                 disabled={
                   isInvesting ||
                   !investmentAmount ||
-                  parseInt(investmentAmount, 10) <= 0 ||
-                  parseInt(investmentAmount, 10) > remainingBalance
+                  parseFormattedAmount(investmentAmount) <= 0 ||
+                  parseFormattedAmount(investmentAmount) > remainingBalance
                 }
               >
                 {isInvesting
@@ -241,15 +230,6 @@ export default function FundingSection({
   onRefreshBalance,
   isProcessing,
 }: FundingSectionProps) {
-  // Debug logging - reduce to minimal
-  // console.log('FundingSection props:', {
-  //  demoday_id: demoday?.id,
-  //  pitches_count: pitches?.length,
-  //  userBalance,
-  //  isHost,
-  //  user_id: user?.id,
-  // });
-
   const supabase = createClient();
   const [investmentAmounts, setInvestmentAmounts] = useState<
     Record<string, string>
@@ -340,43 +320,35 @@ export default function FundingSection({
 
   // Handle investment amount change
   const handleAmountChange = useCallback((pitchId: string, value: string) => {
-    // Remove non-numeric characters and leading zeros
-    const cleanValue = value.replace(/[^0-9]/g, '').replace(/^0+/, '') || '0';
+    // Format the value with commas
+    const formattedValue = formatAmount(value);
 
-    // Immediately update the input value for a more responsive UI
+    // Update the input value
     setInvestmentAmounts((prev) => ({
       ...prev,
-      [pitchId]: cleanValue,
+      [pitchId]: formattedValue,
     }));
   }, []);
 
   // Add specific amount to current investment
   const addAmount = useCallback(
     (pitchId: string, amount: number) => {
-      const currentAmount = parseInt(investmentAmounts[pitchId] || '0', 10);
+      // Get current value and remove formatting
+      const currentValue = investmentAmounts[pitchId] || '0';
+      const currentAmount = parseFormattedAmount(currentValue);
       const newAmount = currentAmount + amount;
 
       // Make sure we don't exceed the remaining balance
       const maxAmount = localUserBalance?.remaining_balance || 0;
       const finalAmount = Math.min(newAmount, maxAmount);
 
+      // Format and update
       setInvestmentAmounts((prev) => ({
         ...prev,
-        [pitchId]: finalAmount.toString(),
+        [pitchId]: finalAmount.toLocaleString(),
       }));
     },
     [investmentAmounts, localUserBalance?.remaining_balance]
-  );
-
-  // Invest all remaining balance
-  const investAll = useCallback(
-    (pitchId: string) => {
-      setInvestmentAmounts((prev) => ({
-        ...prev,
-        [pitchId]: (localUserBalance?.remaining_balance || 0).toString(),
-      }));
-    },
-    [localUserBalance?.remaining_balance]
   );
 
   // Handle investing in a pitch
@@ -384,7 +356,9 @@ export default function FundingSection({
     async (pitchId: string) => {
       if (!demoday || !localUserBalance || !user) return;
 
-      const amount = parseInt(investmentAmounts[pitchId] || '0', 10);
+      const amountValue = investmentAmounts[pitchId] || '0';
+      const amount = parseFormattedAmount(amountValue);
+
       if (amount <= 0 || amount > (localUserBalance.remaining_balance || 0))
         return;
 
@@ -427,7 +401,7 @@ export default function FundingSection({
         setCurrentInvestments(updatedInvestments);
 
         // Reset the input field
-        setInvestmentAmounts((prev) => ({ ...prev, [pitchId]: '0' }));
+        setInvestmentAmounts((prev) => ({ ...prev, [pitchId]: '' }));
 
         // Now perform the actual server update in the background
         const { error: rpcError } = await supabase.rpc('upsert_investment', {
@@ -542,7 +516,7 @@ export default function FundingSection({
       <Card className="mb-6">
         <CardHeader>
           <div className="flex items-center gap-2">
-            <InfoIcon size={20} className="text-blue-500" />
+            <InfoIcon size={20} className="text-blue-600" />
             <CardTitle>Welcome to the Demoday Funding! 🚀</CardTitle>
           </div>
         </CardHeader>
@@ -578,7 +552,7 @@ export default function FundingSection({
                 ).toLocaleString()}
               </span>
             </div>
-            <div className="w-full bg-gray-800 h-2 rounded-full mt-2">
+            <div className="w-full bg-slate-200 dark:bg-slate-800 h-2 rounded-full mt-2">
               <div
                 className="bg-green-500 h-2 rounded-full"
                 style={{
@@ -589,9 +563,6 @@ export default function FundingSection({
           </div>
         </CardContent>
       </Card>
-
-      {/* Use memoized debug component */}
-      <DebugInfo investments={currentInvestments} />
 
       {isLoadingInvestments ? (
         <Card className="mb-4">
@@ -611,11 +582,10 @@ export default function FundingSection({
               pitch={pitch}
               currentInvestmentAmount={currentInvestmentAmount}
               remainingBalance={localUserBalance.remaining_balance}
-              investmentAmount={investmentAmounts[pitch.id] || '0'}
+              investmentAmount={investmentAmounts[pitch.id] || ''}
               isInvesting={!!isInvesting[pitch.id]}
               onAmountChange={(value) => handleAmountChange(pitch.id, value)}
               onAddAmount={(amount) => addAmount(pitch.id, amount)}
-              onInvestAll={() => investAll(pitch.id)}
               onInvest={() => handleInvest(pitch.id)}
             />
           );
