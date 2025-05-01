@@ -757,6 +757,9 @@ export default function DemodayContent({ serverUser }: DemodayContentProps) {
       />
     );
 
+    // Details section with event information
+    <div className="flex justify-center w-full">{detailsSection}</div>;
+
     switch (currentStatus) {
       case 'upcoming':
         return (
@@ -881,7 +884,7 @@ export default function DemodayContent({ serverUser }: DemodayContentProps) {
       {/* Main content area with max-width */}
       <div className="container mx-auto px-1 py-8 max-w-4xl">
         {/* Content Area - Loading/Error/Content */}
-        <div className="space-y-4">
+        <div className="space-y-4 mb-60">
           {isLoading && !selectedMonth ? (
             <p className="text-center text-muted-foreground">
               Loading available months...

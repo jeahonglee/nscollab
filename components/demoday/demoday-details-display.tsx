@@ -12,6 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { InfoIcon, Calendar, MapPin, PenSquare } from 'lucide-react';
 import { DemodayEntry } from '@/types/demoday';
+import Link from 'next/link';
 
 interface DemodayDetailsDisplayProps {
   demoday: DemodayEntry;
@@ -45,7 +46,7 @@ export default function DemodayDetailsDisplay({
   };
 
   return (
-    <Card className="mb-6">
+    <Card className="mb-6 max-w-md mx-auto">
       <CardHeader className="pb-2">
         <div className="flex justify-between items-center">
           <div>
@@ -88,19 +89,15 @@ export default function DemodayDetailsDisplay({
               </div>
             )}
             {demoday.details.luma_url && (
-              <div className="mt-3">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  className="w-full"
-                  onClick={() => {
-                    if (demoday.details.luma_url) {
-                      window.open(demoday.details.luma_url, '_blank');
-                    }
-                  }}
+              <div className="mt-3 flex justify-end">
+                <Link
+                  href={demoday.details.luma_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-blue-400 hover:text-blue-300 transition-colors flex items-center"
                 >
-                  Register on Luma
-                </Button>
+                  Check Luma <span className="ml-1">↗</span>
+                </Link>
               </div>
             )}
           </div>
