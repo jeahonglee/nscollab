@@ -161,15 +161,37 @@ export default function DemodayContent({ serverUser }: DemodayContentProps) {
         }
 
         if (data) {
-          // Parse JSON fields
+          // Parse JSON fields if they're returned as strings
+          let pitchRankings = data.pitch_rankings;
+          let investorRankings = data.investor_rankings;
+
+          // Parse the JSON strings if needed
+          if (typeof pitchRankings === 'string') {
+            try {
+              pitchRankings = JSON.parse(pitchRankings);
+            } catch (e) {
+              console.error('Error parsing pitch rankings:', e);
+              pitchRankings = [];
+            }
+          }
+
+          if (typeof investorRankings === 'string') {
+            try {
+              investorRankings = JSON.parse(investorRankings);
+            } catch (e) {
+              console.error('Error parsing investor rankings:', e);
+              investorRankings = [];
+            }
+          }
+
+          // Create the parsed result object
           const parsedData = {
             ...data,
-            pitch_rankings: data.pitch_rankings as Record<string, unknown>[],
-            investor_rankings: data.investor_rankings as Record<
-              string,
-              unknown
-            >[],
+            pitch_rankings: pitchRankings || [],
+            investor_rankings: investorRankings || [],
           };
+
+          console.log('Parsed results data:', parsedData);
           setDemodayResults(parsedData);
         } else {
           setDemodayResults(null);
@@ -186,6 +208,10 @@ export default function DemodayContent({ serverUser }: DemodayContentProps) {
   const fetchUserBalance = useCallback(
     async (demodayId: string, userId: string) => {
       try {
+        console.log(
+          `Fetching user balance for demoday ${demodayId} and user ${userId}`
+        );
+
         const { data, error } = await supabase
           .from('user_balances')
           .select('*')
@@ -196,15 +222,20 @@ export default function DemodayContent({ serverUser }: DemodayContentProps) {
         if (error) {
           if (error.code === 'PGRST116') {
             // No rows returned - user hasn't registered as an angel yet
+            console.log(
+              'No user balance found - user is not an angel investor yet'
+            );
             setUserBalance(null);
             return;
           }
           throw error;
         }
 
+        console.log('User balance found:', data);
         setUserBalance(data);
       } catch (err) {
         console.error('Error fetching user balance:', err);
+        // For 406 errors, likely a content-type issue - create null balance to allow registration
         setUserBalance(null);
       }
     },
@@ -569,6 +600,9 @@ export default function DemodayContent({ serverUser }: DemodayContentProps) {
 
       // Set isHost based on the updated demoday data
       setIsHost(user.id === updatedDemoday.host_id);
+
+      // Fetch user balance for the current user after status change
+      await fetchUserBalance(selectedDemoday.id, user.id);
     } catch (err) {
       console.error('Error starting demoday:', err);
       setError(
@@ -639,6 +673,22 @@ export default function DemodayContent({ serverUser }: DemodayContentProps) {
     }
   };
 
+  // Handle balance updates from funding section with memoization to prevent unnecessary rerenders
+  const handleBalanceUpdate = useCallback((balance: UserBalance) => {
+    // Only update state if the balance has actually changed
+    // to avoid unnecessary re-renders
+    setUserBalance((prevBalance) => {
+      // If it's the same balance object or same values, don't update state
+      if (
+        prevBalance?.id === balance.id &&
+        prevBalance?.remaining_balance === balance.remaining_balance
+      ) {
+        return prevBalance;
+      }
+      return balance;
+    });
+  }, []);
+
   // Get the currently selected demoday
   const selectedDemoday = selectedMonth
     ? availableDemodays.find((d) => d.event_date === selectedMonth)
@@ -676,11 +726,20 @@ export default function DemodayContent({ serverUser }: DemodayContentProps) {
     ));
   };
 
-  // Determine what section to show based on demoday status
+  // Render demoday content based on status
   const renderDemodayContent = () => {
     if (!selectedDemoday) return null;
 
     const currentStatus = selectedDemoday.status;
+
+    // Debug logging
+    console.log('Rendering demoday content:', {
+      status: currentStatus,
+      demoday_id: selectedDemoday.id,
+      userBalance,
+      isAngel: userBalance?.is_angel,
+      pitches: pitches.length,
+    });
 
     // Show demoday details at the top for all phases
     const detailsSection = (
@@ -743,9 +802,7 @@ export default function DemodayContent({ serverUser }: DemodayContentProps) {
                 isHost={isHost}
                 user={user}
                 onCalculateResults={handleCalculateResults}
-                onRefreshBalance={(balance: UserBalance) =>
-                  setUserBalance(balance)
-                }
+                onRefreshBalance={handleBalanceUpdate}
                 isProcessing={isProcessing}
               />
             )}
@@ -783,7 +840,7 @@ export default function DemodayContent({ serverUser }: DemodayContentProps) {
     <>
       {/* Tabs outside the constrained container */}
       <div className="w-full">
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-1">
           {availableDemodays.length > 0 && (
             <Tabs
               value={selectedMonth}
@@ -822,7 +879,7 @@ export default function DemodayContent({ serverUser }: DemodayContentProps) {
       </div>
 
       {/* Main content area with max-width */}
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <div className="container mx-auto px-1 py-8 max-w-4xl">
         {/* Content Area - Loading/Error/Content */}
         <div className="space-y-4">
           {isLoading && !selectedMonth ? (

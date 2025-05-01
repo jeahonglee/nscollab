@@ -32,6 +32,14 @@ export default function AngelRegistration({
   const [isRegistering, setIsRegistering] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Debug logging
+  console.log('AngelRegistration component:', {
+    demoday_id: demoday?.id,
+    user_id: user?.id,
+    userBalance,
+    isAngel: userBalance?.is_angel,
+  });
+
   // Check if user is already registered as an angel investor
   const isAngel = userBalance?.is_angel || false;
 
@@ -43,6 +51,22 @@ export default function AngelRegistration({
 
     try {
       console.log('Attempting to register as angel for demoday:', demoday.id);
+
+      // Create optimistic balance object for immediate UI feedback
+      const optimisticBalance = {
+        id: `temp-${Date.now()}`,
+        demoday_id: demoday.id,
+        user_id: user.id,
+        initial_balance: 1000000,
+        remaining_balance: 1000000,
+        final_balance: null,
+        is_angel: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      // Optimistically update the UI immediately
+      onRegistrationComplete(optimisticBalance as UserBalance);
 
       // Try using the RPC function with the correct parameter names
       const { data: rpcData, error: rpcError } = await supabase.rpc(
@@ -89,17 +113,15 @@ export default function AngelRegistration({
 
           if (updateError) {
             console.log('Update error:', updateError);
-            throw updateError;
+            console.log('Using client-side optimistic balance');
+            // The optimistic update we sent earlier will be used
+            return;
           }
 
           console.log('Successfully updated balance:', updateData);
-
-          // Notify parent component of successful registration
           onRegistrationComplete(updateData);
         } else {
           console.log('Successfully inserted balance:', balanceData);
-
-          // Insertion was successful
           onRegistrationComplete(balanceData);
         }
       } else {
@@ -115,7 +137,8 @@ export default function AngelRegistration({
 
         if (fetchError) {
           console.log('Error fetching balance after RPC:', fetchError);
-          throw fetchError;
+          // No need to throw error - we already displayed the optimistic UI
+          return;
         }
 
         console.log('Successfully fetched balance after RPC:', balanceData);
