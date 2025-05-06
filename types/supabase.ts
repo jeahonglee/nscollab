@@ -76,6 +76,7 @@ export interface Database {
           investor_id: string;
           pitch_id: string;
           amount: number;
+          adjusted_amount: number | null;
           created_at: string;
         };
         Insert: {
@@ -84,6 +85,7 @@ export interface Database {
           investor_id: string;
           pitch_id: string;
           amount: number;
+          adjusted_amount?: number | null;
           created_at?: string;
         };
         Update: {
@@ -92,6 +94,7 @@ export interface Database {
           investor_id?: string;
           pitch_id?: string;
           amount?: number;
+          adjusted_amount?: number | null;
           created_at?: string;
         };
       };

@@ -51,6 +51,7 @@ export type Investment = {
   investor_id: string;
   pitch_id: string;
   amount: number;
+  adjusted_amount?: number | null;
   created_at: string;
 };
 
